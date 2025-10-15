@@ -48,7 +48,7 @@ function App() {
           <Route path="/employer/job-post" element={<JobPost />} />
           <Route path="/mentorship-chat" element={<MentorshipChat />} />
           <Route path="/privacy" element={<Privacy />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />
