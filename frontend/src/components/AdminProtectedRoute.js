@@ -15,7 +15,7 @@ const AdminProtectedRoute = ({ children }) => {
     
     if (tokenPayload.role !== 'admin') {
       // Not an admin, redirect to login with error
-      alert('Access denied. Admin privileges required..');
+      alert('Access denied. Admin privileges required.');
       return <Navigate to="/login" replace />;
     }
     
