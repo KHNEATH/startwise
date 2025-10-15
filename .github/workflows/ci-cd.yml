@@ -92,6 +92,11 @@ jobs:
     - name: Run frontend tests
       run: |
         cd frontend
+        # Set CI environment variables
+        export CI=true
+        export WATCHMAN_DISABLE_CI=1
+        export REACT_APP_API_URL=http://localhost:5001/api
+        
         # Create a basic test if none exist
         if [ ! -d "src/__tests__" ] && [ ! -f "src/App.test.js" ]; then
           echo "Creating basic test file"
@@ -104,9 +109,10 @@ jobs:
         });
         EOF
         fi
-        npm test -- --coverage --watchAll=false --passWithNoTests
+        npm test -- --coverage --watchAll=false --passWithNoTests --maxWorkers=2
       env:
         CI: true
+        WATCHMAN_DISABLE_CI: 1
 
     - name: Build frontend
       run: |

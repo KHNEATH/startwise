@@ -30,6 +30,16 @@
     "eject": "react-scripts eject",
     "dev": "react-scripts start"
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(axios)/)"
+    ],
+    "moduleNameMapper": {
+      "^axios$": "axios/dist/node/axios.cjs"
+    },
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.js"]
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
