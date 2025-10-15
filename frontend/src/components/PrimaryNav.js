@@ -2,8 +2,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { isLoggedIn, removeToken } from '../utils/auth';
-import logo from '../assets/startwise-new-logo.svg';
-import { useTranslation } from 'react-i18next';
 
 const navLinks = [
   { to: '/', label: 'Home', type: 'route' },
@@ -17,7 +15,6 @@ const navLinks = [
 
 const PrimaryNav = () => {
   const location = useLocation();
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const loggedIn = isLoggedIn();
   

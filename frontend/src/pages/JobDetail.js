@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useParams, useNavigate } from 'react-router-dom';
 import { fetchJobById, applyToJob } from '../api/jobApi';
 
 const JobDetail = () => {
   const { jobId } = useParams();
-  const { state } = useLocation();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);

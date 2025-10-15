@@ -77,7 +77,7 @@ export default function AboutUs() {
         </section>
 
         <div className="text-center text-blue-700 text-base mt-8 font-semibold">
-          Voted #1 in 318 categories &mdash; <a href="#" className="text-blue-600 hover:underline">Learn more</a>
+          Voted #1 in 318 categories &mdash; <button className="text-blue-600 hover:underline bg-transparent border-none cursor-pointer">Learn more</button>
         </div>
       </main>
     </div>

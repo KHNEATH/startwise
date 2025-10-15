@@ -37,7 +37,7 @@ const ProfileBuilder = () => {
       setLoading(true);
       try {
         // TODO: Replace userId=1 with real user ID from auth
-        const res = await saveProfile({ userId: 1, profile: form });
+        await saveProfile({ userId: 1, profile: form });
         setSubmitted(true);
       } catch (err) {
         setApiError(err?.response?.data?.error || 'Failed to save profile');

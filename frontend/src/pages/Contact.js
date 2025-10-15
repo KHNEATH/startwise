@@ -59,10 +59,10 @@ export default function Contact() {
             <div className="text-blue-900 text-sm">info@startwise.com</div>
           </div>
           <div className="flex justify-center gap-4 mt-4">
-            <a href="#" className="text-blue-400 hover:text-blue-700"><i className="fab fa-linkedin text-2xl"></i></a>
-            <a href="#" className="text-blue-400 hover:text-blue-700"><i className="fab fa-facebook text-2xl"></i></a>
-            <a href="#" className="text-blue-400 hover:text-blue-700"><i className="fab fa-instagram text-2xl"></i></a>
-            <a href="#" className="text-blue-400 hover:text-blue-700"><i className="fas fa-envelope text-2xl"></i></a>
+            <button className="text-blue-400 hover:text-blue-700 bg-transparent border-none cursor-pointer"><i className="fab fa-linkedin text-2xl"></i></button>
+            <button className="text-blue-400 hover:text-blue-700 bg-transparent border-none cursor-pointer"><i className="fab fa-facebook text-2xl"></i></button>
+            <button className="text-blue-400 hover:text-blue-700 bg-transparent border-none cursor-pointer"><i className="fab fa-instagram text-2xl"></i></button>
+            <button className="text-blue-400 hover:text-blue-700 bg-transparent border-none cursor-pointer"><i className="fas fa-envelope text-2xl"></i></button>
           </div>
         </div>
         {/* Right: Contact Form */}

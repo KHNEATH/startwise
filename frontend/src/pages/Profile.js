@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { getToken, removeToken } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +56,7 @@ const Profile = () => {
       }
     };
     fetchProfile();
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 pt-28">

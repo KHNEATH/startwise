@@ -53,6 +53,7 @@ const AdminDashboard = () => {
     }
     
     fetchAllData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   // Helper function to get auth headers
@@ -106,6 +107,19 @@ const AdminDashboard = () => {
           mentors: 8, // Mock data
           employers: 12, // Mock data
         });
+        
+        // Set user stats
+        setUserStats({
+          total_users: analyticsRes.data.total_users || 0,
+          active_users: analyticsRes.data.active_users || 0,
+          verified_users: analyticsRes.data.verified_users || 0,
+          new_users_month: analyticsRes.data.new_users_month || 0
+        });
+        
+        // Set activity logs if available
+        if (analyticsRes.data.activity_logs) {
+          setUserActivityLogs(analyticsRes.data.activity_logs);
+        }
       }
     } catch (err) {
       console.error('Data fetch error:', err);
