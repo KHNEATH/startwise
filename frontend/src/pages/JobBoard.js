@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { fetchJobs, postJob, applyToJob, quickApply } from '../api/jobApi';
+import { fetchJobs, postJob, applyToJob, quickApply, updateJob, deleteJob } from '../api/jobApi';
 
 
 const JobBoard = () => {
@@ -18,6 +18,10 @@ const JobBoard = () => {
   const [postSuccess, setPostSuccess] = React.useState(false);
   const [applicationStatus, setApplicationStatus] = React.useState({});
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+  const [editingJob, setEditingJob] = React.useState(null);
+  const [editForm, setEditForm] = React.useState({ title: '', company: '', location: '', type: '', description: '' });
+  const [editErrors, setEditErrors] = React.useState({});
+  const [deleteConfirm, setDeleteConfirm] = React.useState(null);
   const [successMessage, setSuccessMessage] = React.useState('');
 
   // Handlers for filter form
@@ -105,13 +109,92 @@ const JobBoard = () => {
     setLoading(true);
     setApiError('');
     try {
+      console.log('🔍 Fetching jobs from:', process.env.REACT_APP_API_URL || 'http://localhost:5001/api');
       const data = await fetchJobs(filters);
+      console.log('✅ Jobs received:', data);
       // API returns array directly, not wrapped in jobs object
       setJobs(Array.isArray(data) ? data : (data.jobs || []));
     } catch (err) {
-      setApiError(err?.response?.data?.error || 'Failed to load jobs');
+      console.error('❌ Job loading error:', err);
+      console.error('Error response:', err?.response);
+      setApiError(err?.response?.data?.error || err?.message || 'Failed to load jobs');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle edit job
+  const handleEditJob = (job) => {
+    setEditingJob(job.id);
+    setEditForm({
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      type: job.type,
+      description: job.description
+    });
+    setEditErrors({});
+  };
+
+  // Handle edit form change
+  const handleEditFormChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  // Handle save edit
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    setApiError('');
+    
+    // Validation
+    const errors = {};
+    if (!editForm.title.trim()) errors.title = 'Title required';
+    if (!editForm.company.trim()) errors.company = 'Company required';
+    if (!editForm.location.trim()) errors.location = 'Location required';
+    if (!editForm.type.trim()) errors.type = 'Type required';
+    if (!editForm.description.trim()) errors.description = 'Description required';
+    
+    setEditErrors(errors);
+    
+    if (Object.keys(errors).length === 0) {
+      setLoading(true);
+      try {
+        await updateJob(editingJob, editForm);
+        setEditingJob(null);
+        setEditForm({ title: '', company: '', location: '', type: '', description: '' });
+        await loadJobs();
+      } catch (err) {
+        setApiError(err?.response?.data?.error || 'Failed to update job');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setEditingJob(null);
+    setEditForm({ title: '', company: '', location: '', type: '', description: '' });
+    setEditErrors({});
+  };
+
+  // Handle delete job
+  const handleDeleteJob = async (jobId) => {
+    if (deleteConfirm === jobId) {
+      setLoading(true);
+      try {
+        await deleteJob(jobId);
+        await loadJobs();
+        setDeleteConfirm(null);
+      } catch (err) {
+        setApiError(err?.response?.data?.error || 'Failed to delete job');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setDeleteConfirm(jobId);
+      // Auto-cancel confirmation after 5 seconds
+      setTimeout(() => setDeleteConfirm(null), 5000);
     }
   };
 
@@ -310,11 +393,11 @@ const JobBoard = () => {
                     {/* Apply Button and Student Badge */}
                     <div className="flex flex-col gap-4">
                       {/* Buttons Row */}
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <button 
                           onClick={() => handleApplyNow(job.id, job.title)}
                           disabled={applicationStatus[job.id] === 'applying' || applicationStatus[job.id] === 'applied'}
-                          className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 shadow-md ${
+                          className={`px-4 py-2 rounded-xl font-semibold text-xs transition-all duration-200 flex items-center gap-2 shadow-md ${
                             applicationStatus[job.id] === 'applied' 
                               ? 'bg-green-600 text-white cursor-not-allowed shadow-green-200' 
                               : applicationStatus[job.id] === 'applying'
@@ -329,16 +412,36 @@ const JobBoard = () => {
                               ? 'Applied' 
                               : applicationStatus[job.id] === 'applying' 
                               ? 'Applying...' 
-                              : 'Apply Now'}
+                              : 'Apply'}
                           </span>
                           {!applicationStatus[job.id] && <span>→</span>}
                         </button>
                         
                         <button 
                           onClick={() => handleViewDetails(job.id, job.title)}
-                          className="px-4 py-2.5 border-2 border-blue-200 hover:border-blue-400 text-blue-600 hover:text-blue-800 text-sm font-semibold hover:bg-blue-50 transition-all duration-200 rounded-xl"
+                          className="px-3 py-2 border-2 border-blue-200 hover:border-blue-400 text-blue-600 hover:text-blue-800 text-xs font-semibold hover:bg-blue-50 transition-all duration-200 rounded-xl"
                         >
-                          View Details →
+                          Details →
+                        </button>
+                        
+                        {/* Edit Button */}
+                        <button 
+                          onClick={() => handleEditJob(job)}
+                          className="px-3 py-2 border-2 border-yellow-200 hover:border-yellow-400 text-yellow-600 hover:text-yellow-800 text-xs font-semibold hover:bg-yellow-50 transition-all duration-200 rounded-xl"
+                        >
+                          ✏️ Edit
+                        </button>
+                        
+                        {/* Delete Button */}
+                        <button 
+                          onClick={() => handleDeleteJob(job.id)}
+                          className={`px-3 py-2 border-2 text-xs font-semibold transition-all duration-200 rounded-xl ${
+                            deleteConfirm === job.id 
+                              ? 'border-red-600 bg-red-600 text-white hover:bg-red-700' 
+                              : 'border-red-200 hover:border-red-400 text-red-600 hover:text-red-800 hover:bg-red-50'
+                          }`}
+                        >
+                          {deleteConfirm === job.id ? '🗑️ Confirm?' : '🗑️ Delete'}
                         </button>
                       </div>
                       
@@ -360,6 +463,100 @@ const JobBoard = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Job Modal */}
+      {editingJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">✏️ Edit Job</h3>
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div>
+                <input
+                  name="title"
+                  value={editForm.title}
+                  onChange={handleEditFormChange}
+                  className={`w-full p-3 border rounded-xl ${editErrors.title ? 'border-red-400' : 'border-gray-200'}`}
+                  placeholder="Job Title"
+                />
+                {editErrors.title && <div className="text-red-500 text-sm mt-1">{editErrors.title}</div>}
+              </div>
+              
+              <div>
+                <input
+                  name="company"
+                  value={editForm.company}
+                  onChange={handleEditFormChange}
+                  className={`w-full p-3 border rounded-xl ${editErrors.company ? 'border-red-400' : 'border-gray-200'}`}
+                  placeholder="Company"
+                />
+                {editErrors.company && <div className="text-red-500 text-sm mt-1">{editErrors.company}</div>}
+              </div>
+              
+              <div>
+                <input
+                  name="location"
+                  value={editForm.location}
+                  onChange={handleEditFormChange}
+                  className={`w-full p-3 border rounded-xl ${editErrors.location ? 'border-red-400' : 'border-gray-200'}`}
+                  placeholder="Location"
+                />
+                {editErrors.location && <div className="text-red-500 text-sm mt-1">{editErrors.location}</div>}
+              </div>
+              
+              <div>
+                <select
+                  name="type"
+                  value={editForm.type}
+                  onChange={handleEditFormChange}
+                  className={`w-full p-3 border rounded-xl ${editErrors.type ? 'border-red-400' : 'border-gray-200'}`}
+                >
+                  <option value="">Select Type</option>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Internship">Internship</option>
+                  <option value="Freelance">Freelance</option>
+                </select>
+                {editErrors.type && <div className="text-red-500 text-sm mt-1">{editErrors.type}</div>}
+              </div>
+              
+              <div>
+                <textarea
+                  name="description"
+                  value={editForm.description}
+                  onChange={handleEditFormChange}
+                  className={`w-full p-3 border rounded-xl h-24 resize-none ${editErrors.description ? 'border-red-400' : 'border-gray-200'}`}
+                  placeholder="Job Description"
+                />
+                {editErrors.description && <div className="text-red-500 text-sm mt-1">{editErrors.description}</div>}
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : '💾 Save Changes'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-xl font-semibold transition-colors"
+                >
+                  ❌ Cancel
+                </button>
+              </div>
+            </form>
+            
+            {apiError && (
+              <div className="mt-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-xl text-sm">
+                {apiError}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Recommendations Section */}
       <div className="w-full max-w-4xl bg-white p-8 rounded-2xl shadow animate-fade-in-delay4" style={{ animationDelay: '0.3s' }}>
         <div className="flex items-center justify-between mb-6">

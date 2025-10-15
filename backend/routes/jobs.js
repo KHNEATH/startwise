@@ -164,4 +164,47 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Update job by ID
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, company, location, description, type } = req.body;
+  
+  if (!title || !company || !location || !description) {
+    return res.status(400).json({ error: 'All fields required' });
+  }
+  
+  try {
+    const [result] = await pool.execute(
+      'UPDATE jobs SET title = ?, description = ?, company = ?, location = ?, type = ? WHERE id = ?',
+      [title, description, company, location, type || 'Full-time', id]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+    
+    const [updatedJob] = await pool.execute('SELECT * FROM jobs WHERE id = ?', [id]);
+    res.json(updatedJob[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete job by ID
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const [result] = await pool.execute('DELETE FROM jobs WHERE id = ?', [id]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+    
+    res.json({ message: 'Job deleted successfully', id: parseInt(id) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
