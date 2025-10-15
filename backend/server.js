@@ -2,7 +2,10 @@
 const express = require('express');
 const pool = require('./db');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+
+// Load environment variables from root directory
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
 
