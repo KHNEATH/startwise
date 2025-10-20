@@ -33,10 +33,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "backend/vercel-entry.js": {
-      "maxDuration": 30
-    }
   }
 }
