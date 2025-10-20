@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { login } from '../api/userApi';
 import { saveToken } from '../utils/auth';
+import Alert from '../components/Alert';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -11,6 +12,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -31,15 +33,16 @@ const Login = () => {
       
       saveToken(res.token);
       console.log('Token saved to localStorage');
-      
-      // Route based on user role
-      if (res.user && res.user.role === 'admin') {
-        console.log('Admin user detected, navigating to /admin');
-        navigate('/admin');
-      } else {
-        console.log('Regular user, navigating to /profile');
-        navigate('/profile');
-      }
+
+      // Show professional success alert then navigate
+      setSuccess({ title: 'Login successful', message: 'Welcome back! Redirecting…' });
+      setTimeout(() => {
+        if (res.user && res.user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/profile');
+        }
+      }, 1000);
     } catch (err) {
       console.error('=== LOGIN ERROR ===');
       console.error('Full error object:', err);
@@ -106,10 +109,15 @@ const Login = () => {
               <input type="checkbox" id="terms" className="mr-2 w-5 h-5 rounded" required />
               <label htmlFor="terms" className="text-gray-700 text-sm">I agree to the <a href="/terms" className="underline font-semibold">Terms &amp; Condition</a></label>
             </div>
-            <button className="bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-full w-full py-4 text-xl transition-all mb-2 shadow-lg" disabled={loading}>
-              {loading ? 'Logging in...' : 'Log in'}
-            </button>
-            {error && <div className="text-red-500 text-center mt-2 font-semibold">{error}</div>}
+              <button className="bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-full w-full py-4 text-xl transition-all mb-2 shadow-lg" disabled={loading}>
+                {loading ? 'Logging in...' : 'Log in'}
+              </button>
+              {error && <div className="text-red-500 text-center mt-2 font-semibold">{error}</div>}
+              {success && (
+                <div className="mt-4">
+                  <Alert type="success" title={success.title} message={success.message} onClose={() => setSuccess(null)} />
+                </div>
+              )}
           </form>
           <div className="flex items-center my-8">
             <div className="flex-grow h-px bg-gray-200" />

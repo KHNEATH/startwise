@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { signup } from '../api/userApi';
 import { saveToken } from '../utils/auth';
+import Alert from '../components/Alert';
 import { useNavigate } from 'react-router-dom';
 
 const Signup = () => {
@@ -12,6 +13,7 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -26,7 +28,8 @@ const Signup = () => {
       const name = `${firstName} ${lastName}`.trim();
       const res = await signup(name, email, password);
       saveToken(res.token);
-      navigate('/profile');
+      setSuccess({ title: 'Account created', message: 'Welcome! Redirecting to your profile…' });
+      setTimeout(() => navigate('/profile'), 1000);
     } catch (err) {
       setError(err?.response?.data?.error || 'Signup failed');
     } finally {
@@ -123,6 +126,11 @@ const Signup = () => {
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>
             {error && <div className="text-red-500 text-center mt-2 font-semibold">{error}</div>}
+            {success && (
+              <div className="mt-4">
+                <Alert type="success" title={success.title} message={success.message} onClose={() => setSuccess(null)} />
+              </div>
+            )}
           </form>
           <div className="flex items-center my-8">
             <div className="flex-grow h-px bg-gray-200" />
