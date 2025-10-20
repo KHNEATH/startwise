@@ -1,6 +1,6 @@
 
 const express = require('express');
-const pool = require('./db');
+const { getPool } = require('./db');
 const cors = require('cors');
 const path = require('path');
 
@@ -10,8 +10,21 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const app = express();
 
 // CORS configuration for production
+// If FRONTEND_URL is configured use it, otherwise allow all origins temporarily
+const allowedOrigins = process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : ['http://localhost:3000', 'http://localhost:3002'];
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || ['http://localhost:3000', 'http://localhost:3002'],
+  origin: function(origin, callback) {
+    // Log origin for debugging in production
+    console.log('CORS check for origin:', origin);
+    if (!origin) return callback(null, true); // allow non-browser tools or same-origin
+    if (process.env.FRONTEND_URL) {
+      // Strict check when FRONTEND_URL is set
+      return allowedOrigins.indexOf(origin) !== -1 ? callback(null, true) : callback(new Error('Not allowed by CORS'));
+    }
+    // When FRONTEND_URL isn't set (e.g., quick deploy), allow requests from any origin
+    callback(null, true);
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -32,6 +45,11 @@ app.get('/health', (req, res) => {
 if (process.env.NODE_ENV !== 'production') {
   (async () => {
     try {
+      const pool = getPool();
+      if (!pool) {
+        console.warn('DB not configured - skipping connection check');
+        return;
+      }
       await pool.execute('SELECT 1');
       console.log('MySQL connected');
     } catch (err) {
@@ -73,5 +91,10 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5001;
 
-// Start the server
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+// If this module is run directly (node server.js), start the listener for local dev
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+}
+
+// Export app for serverless platforms (Vercel) or testing
+module.exports = app;

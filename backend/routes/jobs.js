@@ -1,5 +1,5 @@
 const express = require('express');
-const pool = require('../db');
+const { getPool } = require('../db');
 const router = express.Router();
 
 // Post a new job - specific route
@@ -9,6 +9,9 @@ router.post('/post', async (req, res) => {
     return res.status(400).json({ error: 'All fields required' });
   }
   try {
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+
     const [result] = await pool.execute(
       'INSERT INTO jobs (title, description, company, location, type, employer_id) VALUES (?, ?, ?, ?, ?, ?)',
       [title, description, company, location, type || 'Full-time', employer_id || 1]
@@ -30,6 +33,9 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'All fields required' });
   }
   try {
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+
     const [result] = await pool.execute(
       'INSERT INTO jobs (title, description, company, location, type, employer_id) VALUES (?, ?, ?, ?, ?, ?)',
       [title, description, company, location, type || 'Full-time', employer_id || 1]

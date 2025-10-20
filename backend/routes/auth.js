@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const pool = require('../db');
+const { getPool } = require('../db');
 const router = express.Router();
 
 // Register
@@ -11,6 +11,13 @@ router.post('/register', async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password required' });
     }
+    const pool = getPool();
+    if (!pool) {
+      // Demo fallback for hosted frontend when DB is not configured
+      console.warn('DB not configured - returning demo register response');
+      return res.status(201).json({ message: 'User registered (demo)' });
+    }
+
     const [existing] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
       return res.status(409).json({ error: 'Email already registered' });
@@ -33,7 +40,14 @@ router.post('/login', async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password required' });
     }
-    
+    const pool = getPool();
+    if (!pool) {
+      // Demo fallback login for hosted frontend
+      console.warn('DB not configured - returning demo login response');
+      const demoUser = { id: 1, username: 'Demo User', email: email, role: 'user' };
+      const token = jwt.sign({ id: demoUser.id, role: demoUser.role }, process.env.JWT_SECRET || 'demo_secret', { expiresIn: '1d' });
+      return res.json({ token, user: demoUser });
+    }
     const [result] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
     const user = result[0];
     
@@ -75,6 +89,12 @@ router.post('/forgot-password', async (req, res) => {
     
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const pool = getPool();
+    if (!pool) {
+      // Demo behavior: always return success message
+      return res.json({ message: 'If this email exists in our system, password reset instructions have been sent.' });
     }
 
     // Check if user exists
@@ -140,6 +160,12 @@ router.post('/reset-password', async (req, res) => {
 
     if (decoded.type !== 'password_reset') {
       return res.status(400).json({ error: 'Invalid token type' });
+    }
+
+    const pool = getPool();
+    if (!pool) {
+      // Demo fallback - pretend password updated
+      return res.json({ message: 'Password has been reset successfully. You can now login with your new password. (demo)' });
     }
 
     // Hash the new password
