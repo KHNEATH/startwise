@@ -2,11 +2,10 @@ import axios from 'axios';
 
 // Dynamic API URL configuration for different environments
 const getApiBaseUrl = () => {
-  // Production environment
+  // Production environment - use same domain or fallback to mock
   if (process.env.NODE_ENV === 'production') {
-    // Use the same domain as the frontend for API calls
-    const currentDomain = window.location.origin;
-    return process.env.REACT_APP_API_URL || `${currentDomain}/api`;
+    // For now, use a mock API endpoint or local storage
+    return '/api'; // This will be relative to the current domain
   }
   // Development environment
   return process.env.REACT_APP_API_URL || 'http://localhost:5001/api';

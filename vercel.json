@@ -2,10 +2,6 @@
   "version": 2,
   "builds": [
     {
-      "src": "backend/vercel-entry.js",
-      "use": "@vercel/node"
-    },
-    {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": { 
@@ -15,23 +11,16 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend/vercel-entry.js"
-    },
-    {
       "src": "/static/(.*)",
       "dest": "frontend/build/static/$1"
     },
     {
-      "src": "/(.*\\.(css|js|ico|png|jpg|jpeg|gif|svg))",
+      "src": "/(.*\\.(css|js|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))",
       "dest": "frontend/build/$1"
     },
     {
       "src": "/(.*)",
       "dest": "frontend/build/index.html"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
