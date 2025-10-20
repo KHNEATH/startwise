@@ -7,6 +7,12 @@ const path = require('path');
 // Load environment variables from root directory
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
+// Ensure a default JWT secret in case environment variable is missing in hosted env
+if (!process.env.JWT_SECRET) {
+  console.warn('Warning: JWT_SECRET not set in environment. Using temporary fallback secret.');
+  process.env.JWT_SECRET = process.env.JWT_SECRET || 'startwise_dev_fallback_secret_please_change';
+}
+
 const app = express();
 
 // CORS configuration for production
