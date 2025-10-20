@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+// Normalize API base URL and ensure it ends with '/api'
+const _rawApiBase = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = (_rawApiBase || '').replace(/\/+$/, '').endsWith('/api')
+  ? (_rawApiBase || '').replace(/\/+$/, '')
+  : (_rawApiBase || '').replace(/\/+$/, '') + '/api';
+
+console.log('🔐 userApi - API_BASE_URL:', API_BASE_URL, 'NODE_ENV:', process.env.NODE_ENV);
 
 // Auth API
 export const login = async (email, password) => {
@@ -14,13 +20,28 @@ export const login = async (email, password) => {
   } catch (error) {
     console.error('userApi.login error:', error);
     console.error('Error response:', error.response);
+
+    // If running in production and backend is unreachable, return a friendly error
+    if (process.env.NODE_ENV === 'production' && (!error.response || error.message.includes('Network'))) {
+      console.warn('userApi.login: backend unreachable in production');
+      throw new Error('Unable to reach authentication service. Please try again later.');
+    }
+
     throw error;
   }
 };
 
 export const signup = async (name, email, password) => {
-  const response = await axios.post(`${API_BASE_URL}/auth/register`, { name, email, password });
-  return response.data;
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/register`, { name, email, password });
+    return response.data;
+  } catch (error) {
+    console.error('userApi.signup error:', error);
+    if (process.env.NODE_ENV === 'production' && (!error.response || error.message.includes('Network'))) {
+      throw new Error('Unable to reach registration service. Please try again later.');
+    }
+    throw error;
+  }
 };
 
 export const saveProfile = async (profileData) => {

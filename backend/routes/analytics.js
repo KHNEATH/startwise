@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const { getPool } = require('../db');
 
 // Get profile count
 router.get('/analytics/profile/count', async (req, res) => {

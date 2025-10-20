@@ -1,5 +1,5 @@
 const express = require('express');
-const pool = require('../db');
+const { getPool } = require('../db');
 const router = express.Router();
 
 // Get all applications (for admin/employer view)

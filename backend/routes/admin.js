@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminManager = require('../adminManager');
-const pool = require('../db');
+const { getPool } = require('../db');
 
 // Middleware to check admin access
 const requireAdmin = async (req, res, next) => {
