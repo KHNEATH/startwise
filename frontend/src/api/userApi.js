@@ -1,7 +1,19 @@
 import axios from 'axios';
 
+// Dynamic API URL configuration for different environments
+const getApiBaseUrl = () => {
+  // Production environment
+  if (process.env.NODE_ENV === 'production') {
+    // Use the same domain as the frontend for API calls
+    const currentDomain = window.location.origin;
+    return process.env.REACT_APP_API_URL || `${currentDomain}/api`;
+  }
+  // Development environment
+  return process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+};
+
 // Normalize API base URL and ensure it ends with '/api'
-const _rawApiBase = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const _rawApiBase = getApiBaseUrl();
 const API_BASE_URL = (_rawApiBase || '').replace(/\/+$/, '').endsWith('/api')
   ? (_rawApiBase || '').replace(/\/+$/, '')
   : (_rawApiBase || '').replace(/\/+$/, '') + '/api';

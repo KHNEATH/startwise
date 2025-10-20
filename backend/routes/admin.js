@@ -101,6 +101,9 @@ router.put('/jobs/:id/status', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+    
     await pool.execute('UPDATE jobs SET status = ? WHERE id = ?', [status, jobId]);
     await adminManager.logAdminActivity(req.user.id, 'update_job_status', 'job', jobId, { new_status: status });
     
@@ -113,6 +116,9 @@ router.put('/jobs/:id/status', requireAdmin, async (req, res) => {
 router.delete('/jobs/:id', requireAdmin, async (req, res) => {
   try {
     const jobId = req.params.id;
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+    
     await pool.execute('DELETE FROM jobs WHERE id = ?', [jobId]);
     await adminManager.logAdminActivity(req.user.id, 'delete_job', 'job', jobId, {});
     
@@ -142,6 +148,9 @@ router.put('/applications/:id/status', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+
     await pool.execute('UPDATE applications SET status = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?', 
       [status, req.user.id, applicationId]);
     
@@ -156,6 +165,9 @@ router.put('/applications/:id/status', requireAdmin, async (req, res) => {
 // Testimonial Management
 router.get('/testimonials', requireAdmin, async (req, res) => {
   try {
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+    
     const [testimonials] = await pool.execute(`
       SELECT t.*, u.username as user_username 
       FROM testimonials t 
@@ -176,6 +188,9 @@ router.put('/testimonials/:id/status', requireAdmin, async (req, res) => {
     if (!['pending', 'approved', 'rejected'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
+
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
 
     await pool.execute('UPDATE testimonials SET status = ?, approved_by = ?, approved_at = NOW() WHERE id = ?', 
       [status, req.user.id, testimonialId]);
@@ -216,6 +231,9 @@ router.get('/activity', requireAdmin, async (req, res) => {
     const { page = 1, limit = 50 } = req.query;
     const offset = (page - 1) * limit;
     
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+    
     const [activities] = await pool.execute(`
       SELECT al.*, u.username as admin_username 
       FROM admin_activity_log al 
@@ -244,6 +262,9 @@ router.get('/analytics/:metric', requireAdmin, async (req, res) => {
     const { metric } = req.params;
     const { days = 30 } = req.query;
     
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+    
     const [data] = await pool.execute(`
       SELECT DATE(recorded_at) as date, SUM(metric_value) as value
       FROM analytics 
@@ -261,6 +282,9 @@ router.get('/analytics/:metric', requireAdmin, async (req, res) => {
 // System Health Check
 router.get('/health', requireAdmin, async (req, res) => {
   try {
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+    
     const [dbCheck] = await pool.execute('SELECT 1 as status');
     const [tableChecks] = await pool.execute(`
       SELECT 

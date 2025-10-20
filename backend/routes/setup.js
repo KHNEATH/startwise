@@ -7,6 +7,9 @@ const router = express.Router();
 // Setup database tables and admin user (for production deployment)
 router.post('/setup-database', async (req, res) => {
   try {
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+    
     // Check if tables already exist
     const [tables] = await pool.execute("SHOW TABLES LIKE 'users'");
     
@@ -90,6 +93,9 @@ router.post('/setup-database', async (req, res) => {
 // Health check for database connection
 router.get('/health', async (req, res) => {
   try {
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+    
     await pool.execute('SELECT 1');
     res.json({ 
       success: true, 

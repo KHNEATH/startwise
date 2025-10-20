@@ -4,7 +4,9 @@ import axios from 'axios';
 const getApiBaseUrl = () => {
   // Production environment
   if (process.env.NODE_ENV === 'production') {
-    return process.env.REACT_APP_API_URL || 'https://startwise-api.vercel.app/api';
+    // Use the same domain as the frontend for API calls
+    const currentDomain = window.location.origin;
+    return process.env.REACT_APP_API_URL || `${currentDomain}/api`;
   }
   // Development environment
   return process.env.REACT_APP_API_URL || 'http://localhost:5001/api';

@@ -1,8 +1,11 @@
-const pool = require('./db');
+const { getPool } = require('./db');
 
 // Admin Dashboard Analytics
 const getAdminDashboardStats = async () => {
   try {
+    const pool = getPool();
+    if (!pool) throw new Error('Database not configured');
+
     // User statistics
     const [totalUsers] = await pool.execute('SELECT COUNT(*) as count FROM users');
     const [newUsersToday] = await pool.execute('SELECT COUNT(*) as count FROM users WHERE DATE(created_at) = CURDATE()');
@@ -56,6 +59,8 @@ const getAdminDashboardStats = async () => {
 // User Management Functions
 const getAllUsers = async (page = 1, limit = 20, search = '', role = '') => {
   try {
+    const pool = getPool();
+    if (!pool) throw new Error('Database not configured');
     const offset = (page - 1) * limit;
     let query = 'SELECT id, username, email, first_name, last_name, role, account_status, email_verified, last_login_at, created_at FROM users';
     let countQuery = 'SELECT COUNT(*) as total FROM users';
@@ -82,8 +87,8 @@ const getAllUsers = async (page = 1, limit = 20, search = '', role = '') => {
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
-    const [users] = await pool.execute(query, params);
-    const [countResult] = await pool.execute(countQuery, params.slice(0, -2)); // Remove limit and offset for count
+  const [users] = await pool.execute(query, params);
+  const [countResult] = await pool.execute(countQuery, params.slice(0, -2)); // Remove limit and offset for count
 
     return {
       users,
@@ -101,6 +106,8 @@ const getAllUsers = async (page = 1, limit = 20, search = '', role = '') => {
 // Job Management Functions
 const getAllJobs = async (page = 1, limit = 20, search = '', status = '') => {
   try {
+    const pool = getPool();
+    if (!pool) throw new Error('Database not configured');
     const offset = (page - 1) * limit;
     let query = 'SELECT id, title, company, location, type, created_at FROM jobs';
     let countQuery = 'SELECT COUNT(*) as total FROM jobs';
@@ -122,8 +129,8 @@ const getAllJobs = async (page = 1, limit = 20, search = '', status = '') => {
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
-    const [jobs] = await pool.execute(query, params);
-    const [countResult] = await pool.execute(countQuery, params.slice(0, -2));
+  const [jobs] = await pool.execute(query, params);
+  const [countResult] = await pool.execute(countQuery, params.slice(0, -2));
 
     return {
       jobs,
@@ -141,6 +148,8 @@ const getAllJobs = async (page = 1, limit = 20, search = '', status = '') => {
 // Application Management Functions
 const getAllApplications = async (page = 1, limit = 20, status = '') => {
   try {
+    const pool = getPool();
+    if (!pool) throw new Error('Database not configured');
     const offset = (page - 1) * limit;
     let query = 'SELECT id, job_title, company, applicant_name, applicant_email, status, created_at FROM applications';
     let countQuery = 'SELECT COUNT(*) as total FROM applications';
@@ -155,8 +164,8 @@ const getAllApplications = async (page = 1, limit = 20, status = '') => {
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
-    const [applications] = await pool.execute(query, params);
-    const [countResult] = await pool.execute(countQuery, params.slice(0, -2));
+  const [applications] = await pool.execute(query, params);
+  const [countResult] = await pool.execute(countQuery, params.slice(0, -2));
 
     return {
       applications,
@@ -174,6 +183,8 @@ const getAllApplications = async (page = 1, limit = 20, status = '') => {
 // System Settings Management
 const getSystemSettings = async () => {
   try {
+    const pool = getPool();
+    if (!pool) throw new Error('Database not configured');
     const [settings] = await pool.execute('SELECT setting_key, setting_value, setting_type, description, is_public FROM system_settings ORDER BY setting_key');
     return settings;
   } catch (error) {
@@ -184,6 +195,8 @@ const getSystemSettings = async () => {
 
 const updateSystemSetting = async (key, value, adminId) => {
   try {
+    const pool = getPool();
+    if (!pool) throw new Error('Database not configured');
     await pool.execute('UPDATE system_settings SET setting_value = ?, updated_by = ? WHERE setting_key = ?', [value, adminId, key]);
     
     // Log admin activity
@@ -199,6 +212,11 @@ const updateSystemSetting = async (key, value, adminId) => {
 // Admin Activity Logging
 const logAdminActivity = async (adminId, action, targetType, targetId, details, ipAddress = null, userAgent = null) => {
   try {
+    const pool = getPool();
+    if (!pool) {
+      // If DB not configured, skip logging
+      return;
+    }
     await pool.execute(
       'INSERT INTO admin_activity_log (admin_id, action, target_type, target_id, details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [adminId, action, targetType, targetId, JSON.stringify(details), ipAddress, userAgent]
@@ -211,6 +229,8 @@ const logAdminActivity = async (adminId, action, targetType, targetId, details, 
 // User Management Actions
 const updateUserStatus = async (userId, status, adminId) => {
   try {
+    const pool = getPool();
+    if (!pool) throw new Error('Database not configured');
     await pool.execute('UPDATE users SET account_status = ? WHERE id = ?', [status, userId]);
     await logAdminActivity(adminId, 'update_user_status', 'user', userId, { new_status: status });
     return true;
@@ -222,6 +242,8 @@ const updateUserStatus = async (userId, status, adminId) => {
 
 const deleteUser = async (userId, adminId) => {
   try {
+    const pool = getPool();
+    if (!pool) throw new Error('Database not configured');
     await pool.execute('DELETE FROM users WHERE id = ?', [userId]);
     await logAdminActivity(adminId, 'delete_user', 'user', userId, {});
     return true;
@@ -234,6 +256,8 @@ const deleteUser = async (userId, adminId) => {
 // Analytics Functions
 const recordAnalytic = async (metricName, metricValue, metricType = 'counter', dimensions = {}) => {
   try {
+    const pool = getPool();
+    if (!pool) return; // Skip analytics when DB not configured
     await pool.execute(
       'INSERT INTO analytics (metric_name, metric_value, metric_type, dimensions) VALUES (?, ?, ?, ?)',
       [metricName, metricValue, metricType, JSON.stringify(dimensions)]
