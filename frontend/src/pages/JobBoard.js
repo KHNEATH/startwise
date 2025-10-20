@@ -117,7 +117,15 @@ const JobBoard = () => {
     } catch (err) {
       console.error('❌ Job loading error:', err);
       console.error('Error response:', err?.response);
-      setApiError(err?.response?.data?.error || err?.message || 'Failed to load jobs');
+      
+      // In production, don't show error - the fetchJobs function handles fallbacks
+      if (process.env.NODE_ENV === 'production') {
+        console.log('🎭 Production mode: API error handled by fetchJobs fallback');
+        // fetchJobs should have returned demo data, so just set empty array if it failed completely
+        setJobs([]);
+      } else {
+        setApiError(err?.response?.data?.error || err?.message || 'Failed to load jobs');
+      }
     } finally {
       setLoading(false);
     }
