@@ -46,8 +46,27 @@ const Profile = () => {
           setTimeout(() => navigate('/login'), 2000);
         } else if (err.response?.status === 404) {
           setError("Profile not found");
-        } else if (err.code === 'ERR_NETWORK') {
-          setError("Cannot connect to server. Please make sure the backend is running.");
+        } else if (err.code === 'ERR_NETWORK' || err.message.includes('localhost')) {
+          // In production, show demo profile instead of error
+          if (process.env.NODE_ENV === 'production') {
+            console.log('🎭 Loading demo profile for production');
+            const demoProfile = {
+              id: 'demo-user',
+              name: 'Demo User',
+              email: 'demo@startwise.com',
+              role: 'job seeker',
+              location: 'Phnom Penh, Cambodia',
+              phone: '+855 12 345 678',
+              education: 'Computer Science Graduate',
+              experience: '2 years in web development',
+              skills: ['React', 'Node.js', 'JavaScript', 'CSS', 'MongoDB'],
+              bio: 'Passionate developer looking for exciting opportunities in the startup ecosystem. This is a demo profile to showcase the platform features.',
+              isDemo: true
+            };
+            setProfile(demoProfile);
+          } else {
+            setError("Cannot connect to server. Please make sure the backend is running.");
+          }
         } else {
           setError(`Failed to fetch profile: ${err.response?.data?.error || err.message}`);
         }
@@ -71,12 +90,17 @@ const Profile = () => {
         ) : error ? (
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="bg-white rounded-lg shadow-lg p-8 text-center max-w-md">
-              <div className="text-red-500 mb-4 text-lg">{error}</div>
+              <div className={`mb-4 text-lg ${error.includes('Demo Mode') ? 'text-blue-600' : 'text-red-500'}`}>
+                {error.includes('Demo Mode') && (
+                  <div className="text-4xl mb-2">🎭</div>
+                )}
+                {error}
+              </div>
               <button 
                 onClick={() => navigate('/login')}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Go to Login
+                {error.includes('Demo Mode') ? 'Continue with Demo' : 'Go to Login'}
               </button>
             </div>
           </div>
@@ -95,7 +119,14 @@ const Profile = () => {
                   </div>
                   {/* User Info */}
                   <div className="text-white min-w-0 flex-1">
-                    <h1 className="text-2xl lg:text-3xl font-bold mb-1 lg:mb-2 truncate">{profile.name}</h1>
+                    <div className="flex items-center space-x-3 mb-1 lg:mb-2">
+                      <h1 className="text-2xl lg:text-3xl font-bold truncate">{profile.name}</h1>
+                      {profile.isDemo && (
+                        <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-medium">
+                          🎭 DEMO
+                        </span>
+                      )}
+                    </div>
                     <p className="text-blue-100 text-base lg:text-lg capitalize">{profile.role}</p>
                     <p className="text-blue-200 mt-1 text-sm lg:text-base truncate">{profile.email}</p>
                     <div className="flex items-center mt-2 text-blue-200 text-xs lg:text-sm">
