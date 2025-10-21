@@ -13,13 +13,26 @@ const Profile = () => {
   const calculateCompletion = (profileData) => {
     if (!profileData) return 0;
     
-    const requiredFields = ['name', 'education', 'skills', 'location', 'age'];
-    const completedFields = requiredFields.filter(field => {
-      const value = profileData[field];
-      return value && String(value).trim() !== '';
-    });
+    // Check if this is user-saved data or just demo fallback
+    const savedProfile = localStorage.getItem('demoProfile');
+    if (!savedProfile) {
+      // No saved profile data = 0% completion
+      return 0;
+    }
     
-    return Math.round((completedFields.length / requiredFields.length) * 100);
+    try {
+      const userSavedData = JSON.parse(savedProfile);
+      const requiredFields = ['name', 'education', 'skills', 'location', 'age'];
+      const completedFields = requiredFields.filter(field => {
+        const value = userSavedData[field];
+        return value && String(value).trim() !== '';
+      });
+      
+      return Math.round((completedFields.length / requiredFields.length) * 100);
+    } catch (error) {
+      console.error('Error parsing saved profile:', error);
+      return 0;
+    }
   };
 
   const completionPercentage = calculateCompletion(profile);
