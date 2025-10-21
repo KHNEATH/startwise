@@ -51,12 +51,19 @@ const Profile = () => {
     }
   };
 
-  const completionPercentage = calculateCompletion(profile);
-
   const handleLogout = () => {
     removeToken();
     navigate('/');
   };
+
+  // Calculate completion percentage after profile is loaded
+  const completionPercentage = profile ? calculateCompletion(profile) : 0;
+  
+  // Debug profile state changes
+  useEffect(() => {
+    console.log('🔄 Profile state updated:', profile);
+    console.log('📊 Completion percentage recalculated:', completionPercentage);
+  }, [profile, completionPercentage]);
 
   useEffect(() => {
     const fetchProfile = async () => {
