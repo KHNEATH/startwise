@@ -9,6 +9,21 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Calculate profile completion percentage
+  const calculateCompletion = (profileData) => {
+    if (!profileData) return 0;
+    
+    const requiredFields = ['name', 'education', 'skills', 'location', 'age'];
+    const completedFields = requiredFields.filter(field => {
+      const value = profileData[field];
+      return value && String(value).trim() !== '';
+    });
+    
+    return Math.round((completedFields.length / requiredFields.length) * 100);
+  };
+
+  const completionPercentage = calculateCompletion(profile);
+
   const handleLogout = () => {
     removeToken();
     navigate('/');
@@ -265,18 +280,33 @@ const Profile = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Basic Info</span>
-                      <span className="text-green-600 font-medium">Complete</span>
+                      <span className={`font-medium ${completionPercentage === 100 ? 'text-green-600' : 'text-yellow-600'}`}>
+                        {completionPercentage === 100 ? 'Complete' : 'In Progress'}
+                      </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-600 h-2 rounded-full" style={{width: '30%'}}></div>
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-500 ${completionPercentage === 100 ? 'bg-green-600' : 'bg-blue-600'}`}
+                        style={{width: `${completionPercentage}%`}}
+                      ></div>
                     </div>
-                    <div className="text-sm text-gray-600">30% Complete</div>
-                    <button 
-                      onClick={() => navigate('/profile-builder')}
-                      className="w-full mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                    >
-                      Complete Your Profile
-                    </button>
+                    <div className="text-sm text-gray-600">{completionPercentage}% Complete</div>
+                    {completionPercentage < 100 && (
+                      <button 
+                        onClick={() => navigate('/profile-builder')}
+                        className="w-full mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
+                        Complete Your Profile
+                      </button>
+                    )}
+                    {completionPercentage === 100 && (
+                      <button 
+                        onClick={() => navigate('/profile-builder')}
+                        className="w-full mt-3 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                      >
+                        ✅ Edit Your Profile
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
