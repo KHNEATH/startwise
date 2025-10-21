@@ -15,22 +15,32 @@ const Profile = () => {
     
     // Check if this is user-saved data or just demo fallback
     const savedProfile = localStorage.getItem('demoProfile');
+    console.log('🔍 Checking saved profile in localStorage:', savedProfile);
+    
     if (!savedProfile) {
       // No saved profile data = 0% completion
+      console.log('❌ No saved profile found in localStorage');
       return 0;
     }
     
     try {
       const userSavedData = JSON.parse(savedProfile);
+      console.log('📊 Parsed saved profile data:', userSavedData);
+      
       const requiredFields = ['name', 'education', 'skills', 'location', 'age'];
       const completedFields = requiredFields.filter(field => {
         const value = userSavedData[field];
-        return value && String(value).trim() !== '';
+        const hasValue = value && String(value).trim() !== '';
+        console.log(`🔍 Field '${field}': '${value}' -> ${hasValue ? '✅' : '❌'}`);
+        return hasValue;
       });
       
-      return Math.round((completedFields.length / requiredFields.length) * 100);
+      const percentage = Math.round((completedFields.length / requiredFields.length) * 100);
+      console.log(`📈 Profile completion: ${completedFields.length}/${requiredFields.length} = ${percentage}%`);
+      
+      return percentage;
     } catch (error) {
-      console.error('Error parsing saved profile:', error);
+      console.error('❌ Error parsing saved profile:', error);
       return 0;
     }
   };
