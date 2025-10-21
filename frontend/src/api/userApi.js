@@ -100,30 +100,157 @@ export const signup = async (name, email, password) => {
 };
 
 export const saveProfile = async (profileData) => {
-  const response = await axios.post(`${API_BASE_URL}/profile`, profileData);
-  return response.data;
+  try {
+    const response = await axios.post(`${API_BASE_URL}/profile`, profileData);
+    return response.data;
+  } catch (error) {
+    console.error('saveProfile error:', error);
+    
+    // In production without backend, provide demo response
+    if (process.env.NODE_ENV === 'production' && 
+        (!error.response || 
+         error.code === 'ERR_NETWORK' || 
+         error.message.includes('Network') ||
+         error.message.includes('localhost') ||
+         error.message.includes('Not allowed to request resource'))) {
+      
+      console.log('🎭 Using demo profile save for production (backend not available)');
+      
+      // Simulate successful profile save
+      const demoResponse = {
+        id: 'demo-profile-' + Date.now(),
+        message: 'Demo profile saved successfully! (Backend not connected)',
+        profile: profileData.profile || profileData,
+        saved: true
+      };
+      
+      // Store demo profile data locally
+      localStorage.setItem('demoProfile', JSON.stringify(demoResponse.profile));
+      
+      return demoResponse;
+    }
+    
+    throw error;
+  }
 };
 
 export const saveCV = async (cvData) => {
-  // Add auth token if available
-  const token = localStorage.getItem('token');
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+  try {
+    // Add auth token if available
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
+    };
+    
+    const response = await axios.post(`${API_BASE_URL}/cv`, cvData, config);
+    return response.data;
+  } catch (error) {
+    console.error('saveCV error:', error);
+    
+    // In production without backend, provide demo response
+    if (process.env.NODE_ENV === 'production' && 
+        (!error.response || 
+         error.code === 'ERR_NETWORK' || 
+         error.message.includes('Network') ||
+         error.message.includes('localhost') ||
+         error.message.includes('Not allowed to request resource'))) {
+      
+      console.log('🎭 Using demo CV save for production (backend not available)');
+      
+      // Simulate successful CV save
+      const demoResponse = {
+        id: 'demo-cv-' + Date.now(),
+        message: 'Demo CV saved successfully! (Backend not connected)',
+        cv: cvData,
+        saved: true
+      };
+      
+      // Store demo CV data locally
+      localStorage.setItem('demoCV', JSON.stringify(cvData));
+      
+      return demoResponse;
     }
-  };
-  
-  const response = await axios.post(`${API_BASE_URL}/cv`, cvData, config);
-  return response.data;
+    
+    throw error;
+  }
 };
 
 export const getProfile = async () => {
-  const response = await axios.get(`${API_BASE_URL}/profile`);
-  return response.data;
+  try {
+    const response = await axios.get(`${API_BASE_URL}/profile`);
+    return response.data;
+  } catch (error) {
+    console.error('getProfile error:', error);
+    
+    // In production, try to load demo profile from localStorage
+    if (process.env.NODE_ENV === 'production' && 
+        (!error.response || 
+         error.code === 'ERR_NETWORK' || 
+         error.message.includes('Network') ||
+         error.message.includes('localhost') ||
+         error.message.includes('Not allowed to request resource'))) {
+      
+      console.log('🎭 Loading demo profile for production');
+      
+      // Try to get saved demo profile first
+      const savedProfile = localStorage.getItem('demoProfile');
+      if (savedProfile) {
+        return JSON.parse(savedProfile);
+      }
+      
+      // Default demo profile if none saved
+      return {
+        name: 'Demo User',
+        education: 'Computer Science Graduate',
+        skills: 'React, Node.js, JavaScript, CSS',
+        location: 'Phnom Penh, Cambodia',
+        age: '22',
+        isDemo: true
+      };
+    }
+    
+    throw error;
+  }
 };
 
 export const getCV = async () => {
-  const response = await axios.get(`${API_BASE_URL}/cv`);
-  return response.data;
+  try {
+    const response = await axios.get(`${API_BASE_URL}/cv`);
+    return response.data;
+  } catch (error) {
+    console.error('getCV error:', error);
+    
+    // In production, try to load demo CV from localStorage
+    if (process.env.NODE_ENV === 'production' && 
+        (!error.response || 
+         error.code === 'ERR_NETWORK' || 
+         error.message.includes('Network') ||
+         error.message.includes('localhost') ||
+         error.message.includes('Not allowed to request resource'))) {
+      
+      console.log('🎭 Loading demo CV for production');
+      
+      // Try to get saved demo CV first
+      const savedCV = localStorage.getItem('demoCV');
+      if (savedCV) {
+        return JSON.parse(savedCV);
+      }
+      
+      // Default demo CV if none saved
+      return {
+        name: 'Demo User',
+        email: 'demo@startwise.com',
+        phone: '+855 12 345 678',
+        experience: 'Software Developer with 2+ years experience',
+        education: 'Bachelor in Computer Science',
+        skills: ['React', 'Node.js', 'JavaScript', 'CSS', 'MongoDB'],
+        isDemo: true
+      };
+    }
+    
+    throw error;
+  }
 };
