@@ -27,6 +27,12 @@ const Profile = () => {
       const userSavedData = JSON.parse(savedProfile);
       console.log('📊 Parsed saved profile data:', userSavedData);
       
+      // Check if this is the default demo profile (not user-created)
+      if (userSavedData.isDemo) {
+        console.log('🎭 This is default demo profile, not user data');
+        return 0;
+      }
+      
       const requiredFields = ['name', 'education', 'skills', 'location', 'age'];
       const completedFields = requiredFields.filter(field => {
         const value = userSavedData[field];
