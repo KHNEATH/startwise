@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { getToken, removeToken } from "../utils/auth";
+import { getProfile } from "../api/userApi";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
@@ -27,16 +27,10 @@ const Profile = () => {
           return;
         }
         
-        const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-        const profileUrl = `${API_BASE_URL}/profile/me`;
-        console.log('Making API call to:', profileUrl);
-        const res = await axios.get(profileUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        console.log('Profile response:', res.data);
-        setProfile(res.data);
+        console.log('Fetching profile using getProfile API...');
+        const profileData = await getProfile();
+        console.log('Profile data received:', profileData);
+        setProfile(profileData);
       } catch (err) {
         console.error('Profile fetch error:', err);
         if (err.response?.status === 401 || err.response?.status === 403) {
@@ -47,25 +41,12 @@ const Profile = () => {
         } else if (err.response?.status === 404) {
           setError("Profile not found");
         } else if (err.code === 'ERR_NETWORK' || err.message.includes('localhost')) {
-          // In production, show demo profile instead of error
-          if (process.env.NODE_ENV === 'production') {
-            console.log('🎭 Loading demo profile for production');
-            const demoProfile = {
-              id: 'demo-user',
-              name: 'Demo User',
-              email: 'demo@startwise.com',
-              role: 'job seeker',
-              location: 'Phnom Penh, Cambodia',
-              phone: '+855 12 345 678',
-              education: 'Computer Science Graduate',
-              experience: '2 years in web development',
-              skills: ['React', 'Node.js', 'JavaScript', 'CSS', 'MongoDB'],
-              bio: 'Passionate developer looking for exciting opportunities in the startup ecosystem. This is a demo profile to showcase the platform features.',
-              isDemo: true
-            };
-            setProfile(demoProfile);
-          } else {
+          // The getProfile function already handles demo fallbacks in production
+          if (process.env.NODE_ENV === 'development') {
             setError("Cannot connect to server. Please make sure the backend is running.");
+          } else {
+            // This shouldn't happen since getProfile handles production fallbacks
+            setError("Unable to load profile. Please try again.");
           }
         } else {
           setError(`Failed to fetch profile: ${err.response?.data?.error || err.message}`);
