@@ -109,29 +109,141 @@ export const fetchJobs = async (filters = {}) => {
 // Demo data for when backend is unavailable
 const getDemoJobs = (filters = {}) => {
   const demoJobs = [
+    // Internships & Entry-Level (No Experience Required)
     {
       id: 'demo-1',
-      title: 'Frontend Developer',
-      company: 'Tech Startup',
+      title: 'Marketing Intern',
+      company: 'Phnom Penh Digital Marketing',
       location: 'Phnom Penh, Cambodia',
-      type: 'Full-time',
-      description: 'Join our team to build amazing web applications using React and modern technologies. Perfect for developers looking to grow their skills in a startup environment.'
+      type: 'Internship',
+      salary: '$150-200/month',
+      description: 'Learn digital marketing, social media management, and content creation. No experience required! Perfect for students. Training provided. Flexible schedule.'
     },
     {
       id: 'demo-2',
-      title: 'Part-time English Tutor',
-      company: 'Education Center',
-      location: 'Siem Reap, Cambodia',
-      type: 'Part-time',
-      description: 'Teach English to local students. No experience required, training provided. Perfect for students or recent graduates.'
+      title: 'Customer Service Representative',
+      company: 'Cambodia Call Center',
+      location: 'Phnom Penh, Cambodia',
+      type: 'Full-time',
+      salary: '$250-350/month',
+      description: 'Handle customer inquiries via phone and chat. No experience needed - full training provided. Good English communication required. Fresh graduates welcome!'
     },
     {
       id: 'demo-3',
+      title: 'English Tutor (Part-time)',
+      company: 'Siem Reap Learning Center',
+      location: 'Siem Reap, Cambodia',
+      type: 'Part-time',
+      salary: '$5-8/hour',
+      description: 'Teach English to local students and tourists. No formal teaching experience required. Perfect for students or gap year candidates. Evening classes available.'
+    },
+    {
+      id: 'demo-4',
       title: 'Social Media Assistant',
-      company: 'Digital Agency',
-      location: 'Remote',
+      company: 'Angkor Digital Agency',
+      location: 'Siem Reap, Cambodia',
       type: 'Internship',
-      description: 'Help manage social media accounts for various clients. Learn digital marketing skills while earning money.'
+      salary: '$120-180/month',
+      description: 'Create content, manage Instagram/Facebook accounts, learn digital marketing. No experience needed! Great for creative students who love social media.'
+    },
+    {
+      id: 'demo-5',
+      title: 'Data Entry Clerk',
+      company: 'Battambang Business Solutions',
+      location: 'Battambang, Cambodia',
+      type: 'Part-time',
+      salary: '$200-300/month',
+      description: 'Enter data, organize files, basic computer work. No experience required - just need basic computer skills. Perfect for students needing flexible hours.'
+    },
+    {
+      id: 'demo-6',
+      title: 'Tour Guide Assistant',
+      company: 'Cambodia Tourism Co.',
+      location: 'Phnom Penh, Cambodia',
+      type: 'Part-time',
+      salary: '$6-10/hour + tips',
+      description: 'Assist tour guides, interact with tourists, learn tourism industry. No experience required! Good English and friendly personality needed. Training provided.'
+    },
+    {
+      id: 'demo-7',
+      title: 'Online Content Creator',
+      company: 'Cambodia Student Network',
+      location: 'Remote',
+      type: 'Freelance',
+      salary: '$3-5/article',
+      description: 'Write articles about student life in Cambodia, create social media content. No experience needed - just passion for writing! Work from anywhere.'
+    },
+    {
+      id: 'demo-8',
+      title: 'Restaurant Server',
+      company: 'Riverside Restaurant Phnom Penh',
+      location: 'Phnom Penh, Cambodia',
+      type: 'Part-time',
+      salary: '$180-250/month + tips',
+      description: 'Serve customers, take orders, learn hospitality skills. No experience required! Evening and weekend shifts available. Great for students.'
+    },
+    {
+      id: 'demo-9',
+      title: 'Computer Skills Trainer',
+      company: 'Kandal Digital Learning Center',
+      location: 'Kandal, Cambodia',
+      type: 'Part-time',
+      salary: '$200-350/month',
+      description: 'Teach basic computer skills to rural students. No formal teaching experience required - just good computer knowledge. Make a real impact!'
+    },
+    {
+      id: 'demo-10',
+      title: 'E-commerce Assistant',
+      company: 'Cambodia Online Shop',
+      location: 'Phnom Penh, Cambodia',
+      type: 'Internship',
+      salary: '$150-250/month',
+      description: 'Help with online store management, product listings, customer service. No experience needed! Learn e-commerce and gain valuable skills.'
+    },
+    {
+      id: 'demo-11',
+      title: 'Translation Assistant (Khmer-English)',
+      company: 'Language Services Cambodia',
+      location: 'Remote',
+      type: 'Freelance',
+      salary: '$5-15/document',
+      description: 'Translate simple documents, help with interpretation. No professional translation experience required - just fluent in both languages!'
+    },
+    {
+      id: 'demo-12',
+      title: 'Photography Assistant',
+      company: 'Angkor Photography Studio',
+      location: 'Siem Reap, Cambodia',
+      type: 'Part-time',
+      salary: '$4-7/hour',
+      description: 'Assist photographers, learn photography skills, help with events. No experience required - just interest in photography! Equipment provided.'
+    },
+    {
+      id: 'demo-13',
+      title: 'Library Assistant',
+      company: 'National University Library',
+      location: 'Phnom Penh, Cambodia',
+      type: 'Part-time',
+      salary: '$150-200/month',
+      description: 'Help students, organize books, maintain library. Perfect for students - study while working! No experience required. Quiet work environment.'
+    },
+    {
+      id: 'demo-14',
+      title: 'Event Setup Assistant',
+      company: 'Cambodia Events Company',
+      location: 'Phnom Penh, Cambodia',
+      type: 'Part-time',
+      salary: '$25-40/event',
+      description: 'Help set up events, weddings, conferences. No experience needed! Weekend work available. Learn event management skills.'
+    },
+    {
+      id: 'demo-15',
+      title: 'Online English Conversation Partner',
+      company: 'Global Language Exchange',
+      location: 'Remote',
+      type: 'Freelance',
+      salary: '$4-8/hour',
+      description: 'Practice English conversation with international students online. No teaching experience required - just be a native or fluent English speaker!'
     }
   ];
   
