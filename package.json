@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "startwise",
   "version": "1.0.0",
   "description": "Startwise - Career platform for startups",
