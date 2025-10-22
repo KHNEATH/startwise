@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchJobById, applyToJob } from '../api/jobApi';
+import { fetchJobById, submitJobApplication } from '../api/jobApi';
 import { saveJobApplication } from '../api/userApi';
+import JobApplicationModal from '../components/JobApplicationModal';
 
 const JobDetail = () => {
   const { jobId } = useParams();
@@ -13,6 +14,7 @@ const JobDetail = () => {
   const [applied, setApplied] = useState(false);
   const [error, setError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
 
   useEffect(() => {
     const loadJob = async () => {
@@ -216,47 +218,40 @@ const JobDetail = () => {
     return mockJobs[id] || null;
   };
 
-  const handleApply = async () => {
+  const handleApply = () => {
+    // Open the application modal instead of immediately applying
+    setShowApplicationModal(true);
+  };
+
+  const handleApplicationSubmit = async (applicationData) => {
     try {
       setApplying(true);
       
+      // Submit the application with CV
+      const result = await submitJobApplication(applicationData);
+      
       // Prepare application data for tracking
-      const applicationData = {
+      const trackingData = {
         jobId: job.id,
         jobTitle: job.title,
         company: job.company,
         location: job.location,
         jobType: job.type,
-        salary: job.salary || 'Not specified'
+        salary: job.salary || 'Not specified',
+        applicationStatus: 'submitted',
+        submittedAt: new Date().toISOString()
       };
       
-      // For mock jobs, simulate application
-      if (jobId.startsWith('rec-')) {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Save application data for tracking
-        saveJobApplication(applicationData);
-        
-        setApplied(true);
-        setShowSuccessModal(true);
-        setTimeout(() => setShowSuccessModal(false), 4000);
-      } else {
-        // Real job application
-        await applyToJob(jobId, { 
-          user_id: 1, 
-          message: `Interested in applying for ${job?.title}` 
-        });
-        
-        // Save application data for tracking
-        saveJobApplication(applicationData);
-        
-        setApplied(true);
-        setShowSuccessModal(true);
-        setTimeout(() => setShowSuccessModal(false), 4000);
-      }
+      // Save application data for tracking
+      saveJobApplication(trackingData);
+      
+      setApplied(true);
+      setShowApplicationModal(false);
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 5000);
+      
     } catch (error) {
-      console.error('Application error:', error);
+      console.error('Application submission error:', error);
       setError('Failed to submit application. Please try again.');
     } finally {
       setApplying(false);
@@ -440,14 +435,36 @@ const JobDetail = () => {
               <p className="text-gray-600 mb-6">
                 Your application for <strong>{job.title}</strong> at <strong>{job.company}</strong> has been submitted successfully!
               </p>
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <span className="animate-pulse">✓</span>
-                <span>The employer will review your application and contact you soon.</span>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">📧</span>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-blue-800 mb-1">What happens next?</p>
+                    <p className="text-sm text-blue-600">
+                      The employer will review your CV and cover letter. If you're a good fit, 
+                      they'll contact you within 2-3 business days for an interview.
+                    </p>
+                  </div>
+                </div>
               </div>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Great, thanks!
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Job Application Modal */}
+      <JobApplicationModal
+        isOpen={showApplicationModal}
+        onClose={() => setShowApplicationModal(false)}
+        job={job}
+        onSubmit={handleApplicationSubmit}
+      />
     </div>
   );
 };

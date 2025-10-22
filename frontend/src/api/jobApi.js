@@ -414,6 +414,16 @@ export const updateJob = async (jobId, jobData) => {
 
 export const deleteJob = async (jobId) => {
   try {
+    // If no API_BASE_URL (production demo mode), simulate deletion
+    if (!API_BASE_URL) {
+      console.log('🎭 Demo mode: Simulating job deletion');
+      // Remove from localStorage if it exists
+      const localJobs = getLocallyPostedJobs();
+      const updatedJobs = localJobs.filter(job => job.id !== jobId);
+      localStorage.setItem('localJobs', JSON.stringify(updatedJobs));
+      return { message: 'Job deleted successfully (demo mode)', id: jobId };
+    }
+
     const response = await axios.delete(`${API_BASE_URL}/jobs/${jobId}`);
     console.log('🗑️ Job deleted:', jobId);
     return response.data;
@@ -426,6 +436,71 @@ export const deleteJob = async (jobId) => {
         !error.response) {
       console.log('🔄 Demo mode: Job deletion simulated');
       return { message: 'Job deleted successfully (demo mode)', id: jobId };
+    }
+    throw error;
+  }
+};
+
+// Enhanced application submission with CV upload
+export const submitJobApplication = async (applicationData) => {
+  try {
+    // If no API_BASE_URL (production demo mode), simulate application
+    if (!API_BASE_URL) {
+      console.log('🎭 Demo mode: Simulating job application with CV');
+      
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Save application locally for tracking
+      const applications = JSON.parse(localStorage.getItem('applications') || '[]');
+      const newApplication = {
+        id: `app-${Date.now()}`,
+        jobId: applicationData.get('jobId'),
+        jobTitle: applicationData.get('jobTitle'),
+        company: applicationData.get('company'),
+        fullName: applicationData.get('fullName'),
+        email: applicationData.get('email'),
+        phone: applicationData.get('phone'),
+        coverLetter: applicationData.get('coverLetter'),
+        cvFileName: applicationData.get('cvFile')?.name || 'cv.pdf',
+        experienceLevel: applicationData.get('experienceLevel'),
+        expectedSalary: applicationData.get('expectedSalary'),
+        availableStartDate: applicationData.get('availableStartDate'),
+        portfolioLink: applicationData.get('portfolioLink'),
+        status: 'pending',
+        appliedAt: new Date().toISOString(),
+        contactResponse: 'The employer will review your application and contact you within 2-3 business days.'
+      };
+      
+      applications.push(newApplication);
+      localStorage.setItem('applications', JSON.stringify(applications));
+      
+      return { 
+        success: true,
+        message: 'Application submitted successfully! The employer will contact you soon.',
+        application: newApplication
+      };
+    }
+
+    const response = await axios.post(`${API_BASE_URL}/applications/submit`, applicationData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error submitting application:', error);
+    if (process.env.NODE_ENV === 'production' || 
+        error.code === 'NETWORK_ERROR' || 
+        error.code === 'ERR_NETWORK' ||
+        error.message.includes('Network Error') ||
+        !error.response) {
+      console.log('🔄 Demo mode: Application submission simulated');
+      return { 
+        success: true,
+        message: 'Application submitted successfully (demo mode)',
+        demo: true 
+      };
     }
     throw error;
   }
