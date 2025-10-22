@@ -117,7 +117,24 @@ const getDemoJobs = (filters = {}) => {
       location: 'Phnom Penh, Cambodia',
       type: 'Internship',
       salary: '$150-200/month',
-      description: 'Learn digital marketing, social media management, and content creation. No experience required! Perfect for students. Training provided. Flexible schedule.'
+      created_at: new Date().toISOString(),
+      requirements: 'No experience required, Basic computer skills, Good communication in English, Enthusiastic about learning',
+      benefits: 'Training provided, Flexible schedule, Certificate of completion, Potential for full-time position',
+      description: `Learn digital marketing, social media management, and content creation. No experience required! Perfect for students.
+
+**What you'll do:**
+• Create engaging social media content
+• Learn Facebook and Instagram advertising
+• Assist with email marketing campaigns
+• Help with market research and analysis
+• Support digital marketing projects
+
+**Perfect for:**
+• Students looking for practical experience
+• Recent graduates wanting to learn digital marketing
+• Anyone interested in social media and online marketing
+
+Training provided - we'll teach you everything you need to know!`
     },
     {
       id: 'demo-2',
@@ -126,7 +143,25 @@ const getDemoJobs = (filters = {}) => {
       location: 'Phnom Penh, Cambodia',
       type: 'Full-time',
       salary: '$250-350/month',
-      description: 'Handle customer inquiries via phone and chat. No experience needed - full training provided. Good English communication required. Fresh graduates welcome!'
+      created_at: new Date().toISOString(),
+      requirements: 'Good English communication, Basic computer skills, Patience and friendly attitude, No previous experience needed',
+      benefits: 'Full training program, Health insurance, Performance bonuses, Career advancement opportunities',
+      description: `Handle customer inquiries via phone and chat. No experience needed - full training provided. Fresh graduates welcome!
+
+**What you'll do:**
+• Answer customer phone calls and chats
+• Help resolve customer issues and questions
+• Process orders and handle complaints
+• Maintain customer records in our system
+• Work with team to improve customer satisfaction
+
+**Training includes:**
+• Customer service best practices
+• Company products and services
+• Computer systems and software
+• Communication skills development
+
+Great entry-level position with growth opportunities!`
     },
     {
       id: 'demo-3',
@@ -423,7 +458,8 @@ export const fetchJobById = async (jobId) => {
       
       const job = allJobs.find(j => j.id === jobId);
       if (job) {
-        return { success: true, job };
+        // Return the job directly to match what JobDetail component expects
+        return job;
       } else {
         throw new Error(`Job with ID ${jobId} not found`);
       }
