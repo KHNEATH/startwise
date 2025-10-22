@@ -1,11 +1,38 @@
 import axios from 'axios';
 
+// Helper function to save locally posted jobs
+const saveLocallyPostedJob = (job) => {
+  try {
+    const existingJobs = JSON.parse(localStorage.getItem('localJobs') || '[]');
+    existingJobs.push(job);
+    localStorage.setItem('localJobs', JSON.stringify(existingJobs));
+    console.log('💾 Job saved locally:', job.title);
+  } catch (error) {
+    console.error('❌ Failed to save job locally:', error);
+  }
+};
+
+// Helper function to get locally posted jobs
+const getLocallyPostedJobs = () => {
+  try {
+    return JSON.parse(localStorage.getItem('localJobs') || '[]');
+  } catch (error) {
+    console.error('❌ Failed to get local jobs:', error);
+    return [];
+  }
+};
+
 // Dynamic API URL configuration for different environments
 const getApiBaseUrl = () => {
-  // Production environment - use same domain or fallback to mock
+  // Production environment - check if backend is deployed
   if (process.env.NODE_ENV === 'production') {
-    // For now, use a mock API endpoint or local storage
-    return '/api'; // This will be relative to the current domain
+    // If REACT_APP_API_URL is set, use it (for deployed backend)
+    if (process.env.REACT_APP_API_URL) {
+      return process.env.REACT_APP_API_URL;
+    }
+    // Otherwise, use demo mode (no backend deployed)
+    console.log('🎭 Production mode: No backend URL configured, using demo mode');
+    return null; // This will trigger demo mode in all API calls
   }
   // Development environment
   return process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
@@ -22,6 +49,15 @@ console.log('🌐 API Configuration:', {
 
 export const fetchJobs = async (filters = {}) => {
   try {
+    // If no API_BASE_URL (production demo mode), return demo data immediately
+    if (!API_BASE_URL) {
+      console.log('🎭 Demo mode: No backend configured, returning demo jobs');
+      const demoJobs = getDemoJobs(filters);
+      const localJobs = getLocallyPostedJobs();
+      const allJobs = [...localJobs, ...demoJobs];
+      return applyFilters(allJobs, filters);
+    }
+
     const params = {};
     if (filters.title) params.title = filters.title;
     if (filters.type) params.type = filters.type;
@@ -108,28 +144,7 @@ const getDemoJobs = (filters = {}) => {
   });
 };
 
-// Helper function to get locally posted jobs (for production demo mode)
-const getLocallyPostedJobs = () => {
-  try {
-    const storedJobs = localStorage.getItem('localPostedJobs');
-    return storedJobs ? JSON.parse(storedJobs) : [];
-  } catch (error) {
-    console.error('Error getting local jobs:', error);
-    return [];
-  }
-};
 
-// Helper function to save locally posted jobs
-const saveLocallyPostedJob = (job) => {
-  try {
-    const existingJobs = getLocallyPostedJobs();
-    const updatedJobs = [job, ...existingJobs.slice(0, 19)]; // Keep only 20 most recent
-    localStorage.setItem('localPostedJobs', JSON.stringify(updatedJobs));
-    console.log('💾 Saved job locally:', job.title);
-  } catch (error) {
-    console.error('Error saving local job:', error);
-  }
-};
 
 // Helper function to apply filters to jobs array
 const applyFilters = (jobs, filters) => {
@@ -143,6 +158,31 @@ const applyFilters = (jobs, filters) => {
 
 export const postJob = async (jobData) => {
   try {
+    // If no API_BASE_URL (production demo mode), simulate job posting immediately
+    if (!API_BASE_URL) {
+      console.log('🎭 Demo mode: No backend configured, simulating job post');
+      
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const newJob = { 
+        ...jobData, 
+        id: `demo-production-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        status: 'active'
+      };
+      
+      // Save locally for persistence
+      saveLocallyPostedJob(newJob);
+      
+      return { 
+        success: true,
+        message: 'Job posted successfully (demo mode)',
+        job: newJob,
+        demo: true 
+      };
+    }
+
     console.log('🌐 Posting job to API:', `${API_BASE_URL}/jobs/post`);
     console.log('📋 Job data:', jobData);
     
@@ -260,6 +300,27 @@ export const quickApply = async (applicationData) => {
 };
 
 export const fetchJobById = async (jobId) => {
-  const response = await axios.get(`${API_BASE_URL}/jobs/${jobId}`);
-  return response.data;
+  try {
+    // If no API_BASE_URL (production demo mode), search in demo/local jobs
+    if (!API_BASE_URL) {
+      console.log('🎭 Demo mode: Searching for job ID:', jobId);
+      
+      const localJobs = getLocallyPostedJobs();
+      const demoJobs = getDemoJobs();
+      const allJobs = [...localJobs, ...demoJobs];
+      
+      const job = allJobs.find(j => j.id === jobId);
+      if (job) {
+        return { success: true, job };
+      } else {
+        throw new Error(`Job with ID ${jobId} not found`);
+      }
+    }
+
+    const response = await axios.get(`${API_BASE_URL}/jobs/${jobId}`);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error fetching job by ID:', error);
+    throw error;
+  }
 };
