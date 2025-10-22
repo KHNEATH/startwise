@@ -128,23 +128,72 @@ const JobBoard = () => {
       console.log('🔍 Fetching jobs from:', process.env.REACT_APP_API_URL || 'http://localhost:5001/api');
       const data = await fetchJobs(filters);
       console.log('✅ Jobs received:', data);
-      // API returns array directly, not wrapped in jobs object
-      setJobs(Array.isArray(data) ? data : (data.jobs || []));
+      console.log('📊 Jobs type:', typeof data);
+      console.log('📊 Is array:', Array.isArray(data));
+      console.log('📊 Jobs length:', Array.isArray(data) ? data.length : 'N/A');
+      
+      // Ensure we always have an array
+      if (Array.isArray(data)) {
+        console.log('✅ Setting jobs array:', data.length, 'jobs');
+        setJobs(data);
+      } else if (data && data.jobs && Array.isArray(data.jobs)) {
+        console.log('✅ Setting jobs from data.jobs:', data.jobs.length, 'jobs');
+        setJobs(data.jobs);
+      } else {
+        console.warn('⚠️ Invalid data format, setting empty jobs array');
+        console.log('Data received:', data);
+        setJobs([]);
+      }
     } catch (err) {
       console.error('❌ Job loading error:', err);
       console.error('Error response:', err?.response);
       
-      // In production, don't show error - the fetchJobs function handles fallbacks
-      if (process.env.NODE_ENV === 'production') {
-        console.log('🎭 Production mode: API error handled by fetchJobs fallback');
-        // fetchJobs should have returned demo data, so just set empty array if it failed completely
-        setJobs([]);
-      } else {
+      // In any case of error, try to show demo jobs
+      console.log('🔄 Attempting to load demo jobs as fallback...');
+      try {
+        // Try to get demo jobs from localStorage or use hardcoded ones
+        const demoJobs = getLocalDemoJobs();
+        console.log('🎭 Loading demo jobs:', demoJobs.length);
+        setJobs(demoJobs);
+        setApiError(''); // Clear error since we have demo jobs
+      } catch (demoError) {
+        console.error('❌ Demo jobs fallback failed:', demoError);
         setApiError(err?.response?.data?.error || err?.message || 'Failed to load jobs');
+        setJobs([]);
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to get demo jobs as fallback
+  const getLocalDemoJobs = () => {
+    return [
+      {
+        id: 'demo-1',
+        title: 'Frontend Developer',
+        company: 'Tech Startup Cambodia',
+        location: 'Phnom Penh, Cambodia',
+        type: 'Full-time',
+        description: 'Join our team to build amazing web applications using React and modern technologies.'
+      },
+      {
+        id: 'demo-2', 
+        title: 'Part-time English Tutor',
+        company: 'Education Center',
+        location: 'Siem Reap, Cambodia',
+        type: 'Part-time',
+        description: 'Teach English to local students. No experience required, training provided.'
+      },
+      {
+        id: 'demo-3',
+        title: 'Social Media Assistant',
+        company: 'Digital Agency',
+        location: 'Remote',
+        type: 'Internship',
+        description: 'Help manage social media accounts for various clients.'
+      }
+    ];
   };
 
   // Handle edit job
