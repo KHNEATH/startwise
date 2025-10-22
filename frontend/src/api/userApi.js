@@ -254,3 +254,130 @@ export const getCV = async () => {
     throw error;
   }
 };
+
+// Job Application Tracking Functions
+export const saveJobApplication = (applicationData) => {
+  try {
+    console.log('💾 Saving job application:', applicationData);
+    
+    // Get existing applications from localStorage
+    const existingApplications = JSON.parse(localStorage.getItem('userApplications') || '[]');
+    
+    // Create new application with timestamp and ID
+    const newApplication = {
+      id: `app-${Date.now()}`,
+      ...applicationData,
+      appliedAt: new Date().toISOString(),
+      status: 'Applied'
+    };
+    
+    // Add to existing applications
+    const updatedApplications = [newApplication, ...existingApplications];
+    
+    // Save back to localStorage
+    localStorage.setItem('userApplications', JSON.stringify(updatedApplications));
+    
+    console.log('✅ Application saved successfully:', newApplication);
+    return newApplication;
+  } catch (error) {
+    console.error('❌ Error saving application:', error);
+    throw error;
+  }
+};
+
+export const getUserApplications = async () => {
+  try {
+    console.log('📊 Fetching user applications...');
+    
+    // Try to fetch from API first (if backend is available)
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/applications/user`);
+        console.log('✅ Applications fetched from API:', response.data);
+        return response.data;
+      } catch (error) {
+        console.log('⚠️ API not available, using localStorage data');
+      }
+    }
+    
+    // Fallback to localStorage for production or when API is unavailable
+    const applications = JSON.parse(localStorage.getItem('userApplications') || '[]');
+    console.log('📱 Applications from localStorage:', applications);
+    
+    return applications;
+  } catch (error) {
+    console.error('❌ Error fetching applications:', error);
+    return [];
+  }
+};
+
+export const getUserStatistics = async () => {
+  try {
+    console.log('📈 Calculating user statistics...');
+    
+    const applications = await getUserApplications();
+    
+    const stats = {
+      totalApplications: applications.length,
+      profileViews: Math.floor(Math.random() * 50) + applications.length * 2, // Simulated
+      savedJobs: Math.floor(applications.length / 2), // Simulated
+      interviews: Math.floor(applications.length * 0.2) // Simulated 20% interview rate
+    };
+    
+    console.log('📊 User statistics:', stats);
+    return stats;
+  } catch (error) {
+    console.error('❌ Error calculating statistics:', error);
+    return {
+      totalApplications: 0,
+      profileViews: 0,
+      savedJobs: 0,
+      interviews: 0
+    };
+  }
+};
+
+export const getRecentActivity = async () => {
+  try {
+    console.log('🕐 Fetching recent activity...');
+    
+    const applications = await getUserApplications();
+    
+    // Create activity items from applications
+    const applicationActivities = applications.slice(0, 5).map(app => ({
+      id: `activity-${app.id}`,
+      type: 'application',
+      title: `Applied to ${app.jobTitle}`,
+      description: `at ${app.company}`,
+      timestamp: app.appliedAt,
+      icon: 'briefcase'
+    }));
+    
+    // Add profile creation activity if no applications
+    const profileActivity = {
+      id: 'activity-profile',
+      type: 'profile',
+      title: 'Profile created',
+      description: 'Welcome to StartWise!',
+      timestamp: new Date().toISOString(),
+      icon: 'user'
+    };
+    
+    const allActivities = applications.length > 0 
+      ? applicationActivities 
+      : [profileActivity];
+    
+    console.log('📋 Recent activities:', allActivities);
+    return allActivities;
+  } catch (error) {
+    console.error('❌ Error fetching recent activity:', error);
+    return [{
+      id: 'activity-profile',
+      type: 'profile',
+      title: 'Profile created',
+      description: 'Welcome to StartWise!',
+      timestamp: new Date().toISOString(),
+      icon: 'user'
+    }];
+  }
+};

@@ -89,15 +89,27 @@ const JobBoard = () => {
     if (Object.keys(errors).length === 0) {
       setLoading(true);
       try {
-        // TODO: Replace employer_id=1 with real employer ID from auth
-        await postJob({ ...postForm, employer_id: 1 });
+        console.log('📤 Posting job:', postForm);
+        const result = await postJob({ ...postForm, employer_id: 1 });
+        console.log('✅ Job posted successfully:', result);
+        
+        // Clear form and show success
         setPostForm({ title: '', company: '', location: '', type: '', description: '' });
         setPostSuccess(true);
-        setTimeout(() => setPostSuccess(false), 2000);
+        
+        // Show success message with demo mode indicator if applicable
+        if (result.demo) {
+          setApiError(''); // Clear any previous errors
+          console.log('🎭 Demo mode job posting successful');
+        }
+        
+        setTimeout(() => setPostSuccess(false), 3000);
         setShowPostForm(false);
         await loadJobs();
       } catch (err) {
-        setApiError(err?.response?.data?.error || 'Failed to post job');
+        console.error('❌ Job posting failed:', err);
+        const errorMessage = err?.response?.data?.error || err.message || 'Failed to post job. Please try again.';
+        setApiError(errorMessage);
       } finally {
         setLoading(false);
       }

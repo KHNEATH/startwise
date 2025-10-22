@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchJobById, applyToJob } from '../api/jobApi';
+import { saveJobApplication } from '../api/userApi';
 
 const JobDetail = () => {
   const { jobId } = useParams();
@@ -217,10 +218,25 @@ const JobDetail = () => {
   const handleApply = async () => {
     try {
       setApplying(true);
+      
+      // Prepare application data for tracking
+      const applicationData = {
+        jobId: job.id,
+        jobTitle: job.title,
+        company: job.company,
+        location: job.location,
+        jobType: job.type,
+        salary: job.salary || 'Not specified'
+      };
+      
       // For mock jobs, simulate application
       if (jobId.startsWith('rec-')) {
         // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Save application data for tracking
+        saveJobApplication(applicationData);
+        
         setApplied(true);
         setShowSuccessModal(true);
         setTimeout(() => setShowSuccessModal(false), 4000);
@@ -230,6 +246,10 @@ const JobDetail = () => {
           user_id: 1, 
           message: `Interested in applying for ${job?.title}` 
         });
+        
+        // Save application data for tracking
+        saveJobApplication(applicationData);
+        
         setApplied(true);
         setShowSuccessModal(true);
         setTimeout(() => setShowSuccessModal(false), 4000);

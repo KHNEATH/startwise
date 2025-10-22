@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getToken, removeToken } from "../utils/auth";
-import { getProfile } from "../api/userApi";
+import { getProfile, getUserStatistics, getRecentActivity } from "../api/userApi";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
@@ -8,6 +8,15 @@ const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [statistics, setStatistics] = useState({
+    totalApplications: 0,
+    profileViews: 0,
+    savedJobs: 0,
+    interviews: 0
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingActivity, setLoadingActivity] = useState(true);
 
   // Calculate profile completion percentage
   const calculateCompletion = (profileData) => {
@@ -106,7 +115,34 @@ const Profile = () => {
         setLoading(false);
       }
     };
+
+    const fetchStatistics = async () => {
+      setLoadingStats(true);
+      try {
+        const stats = await getUserStatistics();
+        setStatistics(stats);
+      } catch (error) {
+        console.error('Error fetching statistics:', error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    const fetchActivity = async () => {
+      setLoadingActivity(true);
+      try {
+        const activity = await getRecentActivity();
+        setRecentActivity(activity);
+      } catch (error) {
+        console.error('Error fetching activity:', error);
+      } finally {
+        setLoadingActivity(false);
+      }
+    };
+
     fetchProfile();
+    fetchStatistics();
+    fetchActivity();
   }, [navigate]);
 
   return (
@@ -224,20 +260,56 @@ const Profile = () => {
                   </h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-100">
-                      <div className="text-2xl font-bold text-blue-600">0</div>
-                      <div className="text-sm text-gray-600">Job Applications</div>
+                      {loadingStats ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 bg-blue-200 rounded mb-2"></div>
+                          <div className="h-4 bg-blue-100 rounded"></div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-2xl font-bold text-blue-600">{statistics.totalApplications}</div>
+                          <div className="text-sm text-gray-600">Job Applications</div>
+                        </>
+                      )}
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg border border-green-100">
-                      <div className="text-2xl font-bold text-green-600">0</div>
-                      <div className="text-sm text-gray-600">Profile Views</div>
+                      {loadingStats ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 bg-green-200 rounded mb-2"></div>
+                          <div className="h-4 bg-green-100 rounded"></div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-2xl font-bold text-green-600">{statistics.profileViews}</div>
+                          <div className="text-sm text-gray-600">Profile Views</div>
+                        </>
+                      )}
                     </div>
                     <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-100">
-                      <div className="text-2xl font-bold text-purple-600">0</div>
-                      <div className="text-sm text-gray-600">Saved Jobs</div>
+                      {loadingStats ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 bg-purple-200 rounded mb-2"></div>
+                          <div className="h-4 bg-purple-100 rounded"></div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-2xl font-bold text-purple-600">{statistics.savedJobs}</div>
+                          <div className="text-sm text-gray-600">Saved Jobs</div>
+                        </>
+                      )}
                     </div>
                     <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-100">
-                      <div className="text-2xl font-bold text-orange-600">0</div>
-                      <div className="text-sm text-gray-600">Interviews</div>
+                      {loadingStats ? (
+                        <div className="animate-pulse">
+                          <div className="h-8 bg-orange-200 rounded mb-2"></div>
+                          <div className="h-4 bg-orange-100 rounded"></div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-2xl font-bold text-orange-600">{statistics.interviews}</div>
+                          <div className="text-sm text-gray-600">Interviews</div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -251,21 +323,75 @@ const Profile = () => {
                     Recent Activity
                   </h2>
                   <div className="space-y-4">
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                    {loadingActivity ? (
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="flex items-center p-3 bg-gray-50 rounded-lg animate-pulse">
+                            <div className="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full mr-3"></div>
+                            <div className="flex-1">
+                              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                              <div className="h-3 bg-gray-100 rounded w-2/3"></div>
+                            </div>
+                            <div className="w-12 h-3 bg-gray-100 rounded"></div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">Profile created</div>
-                        <div className="text-xs text-gray-500">Welcome to StartWise!</div>
+                    ) : recentActivity.length > 0 ? (
+                      recentActivity.map((activity) => {
+                        const getActivityIcon = (type) => {
+                          switch (type) {
+                            case 'application':
+                              return (
+                                <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+                                </svg>
+                              );
+                            case 'profile':
+                              return (
+                                <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                </svg>
+                              );
+                            default:
+                              return (
+                                <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              );
+                          }
+                        };
+
+                        const getTimeAgo = (timestamp) => {
+                          const now = new Date();
+                          const activityTime = new Date(timestamp);
+                          const diffInMinutes = Math.floor((now - activityTime) / (1000 * 60));
+                          
+                          if (diffInMinutes < 1) return 'Just now';
+                          if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+                          if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+                          return `${Math.floor(diffInMinutes / 1440)}d ago`;
+                        };
+
+                        return (
+                          <div key={activity.id} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                              activity.type === 'application' ? 'bg-blue-100' : 'bg-green-100'
+                            }`}>
+                              {getActivityIcon(activity.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium text-gray-900 truncate">{activity.title}</div>
+                              <div className="text-xs text-gray-500 truncate">{activity.description}</div>
+                            </div>
+                            <div className="text-xs text-gray-400 flex-shrink-0">{getTimeAgo(activity.timestamp)}</div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="text-center py-4 text-gray-500 text-sm">
+                        Start applying to jobs to see your activity here
                       </div>
-                      <div className="text-xs text-gray-400">Today</div>
-                    </div>
-                    <div className="text-center py-4 text-gray-500 text-sm">
-                      Start applying to jobs to see your activity here
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -101,16 +101,37 @@ const getDemoJobs = (filters = {}) => {
 
 export const postJob = async (jobData) => {
   try {
+    console.log('🌐 Posting job to API:', `${API_BASE_URL}/jobs/post`);
+    console.log('📋 Job data:', jobData);
+    
     const response = await axios.post(`${API_BASE_URL}/jobs/post`, jobData);
+    console.log('✅ API Response:', response.data);
     return response.data;
   } catch (error) {
+    console.error('❌ Job posting API error:', error);
+    
     if (process.env.NODE_ENV === 'production' || 
         error.code === 'NETWORK_ERROR' || 
         error.code === 'ERR_NETWORK' ||
         error.message.includes('Network Error') ||
+        error.message.includes('ERR_NETWORK') ||
         !error.response) {
-      console.log('🔄 Demo mode: Job posting simulated');
-      return { ...jobData, id: `demo-${Date.now()}`, message: 'Job posted successfully (demo mode)' };
+      console.log('🔄 Demo mode: Job posting simulated (frontend fallback)');
+      
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      return { 
+        success: true,
+        message: 'Job posted successfully (demo mode)',
+        job: { 
+          ...jobData, 
+          id: `demo-frontend-${Date.now()}`,
+          created_at: new Date().toISOString(),
+          status: 'active'
+        },
+        demo: true 
+      };
     }
     throw error;
   }
