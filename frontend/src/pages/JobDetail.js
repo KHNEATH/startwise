@@ -22,6 +22,7 @@ const JobDetail = () => {
         if (jobId.startsWith('rec-')) {
           setJob(getMockJobData(jobId));
         } else {
+          // For demo jobs and real jobs, use fetchJobById
           const jobData = await fetchJobById(jobId);
           setJob(jobData);
         }
