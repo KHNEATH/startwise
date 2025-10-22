@@ -101,6 +101,10 @@ const JobBoard = () => {
         if (result.demo) {
           setApiError(''); // Clear any previous errors
           console.log('🎭 Demo mode job posting successful');
+          
+          // In demo mode, add the job directly to the jobs list for immediate display
+          const newJob = result.job;
+          setJobs(prevJobs => [newJob, ...prevJobs]);
         }
         
         setTimeout(() => setPostSuccess(false), 3000);
@@ -354,7 +358,23 @@ const JobBoard = () => {
           ) : apiError ? (
             <div className="text-red-500 text-center italic animate-fade-in">{apiError}</div>
           ) : filteredJobs.length === 0 ? (
-            <div className="text-gray-400 text-center italic animate-fade-in">{t('jobBoard.noJobs') || 'No jobs found.'}</div>
+            <div className="text-gray-400 text-center italic animate-fade-in">
+              {jobs.length === 0 ? (
+                <div className="py-12">
+                  <div className="text-6xl mb-4">📋</div>
+                  <div className="text-xl font-semibold text-gray-600 mb-2">No jobs posted yet</div>
+                  <div className="text-gray-500">Be the first to post a job opportunity!</div>
+                  <button 
+                    onClick={() => setShowPostForm(true)}
+                    className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Post a Job
+                  </button>
+                </div>
+              ) : (
+                'No jobs match your filters. Try adjusting your search criteria.'
+              )}
+            </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredJobs.map((job, idx) => {

@@ -46,15 +46,24 @@ export const fetchJobs = async (filters = {}) => {
       url: error.config?.url
     });
     
-    // If backend is unavailable in production, return demo data
+    // If backend is unavailable in production, return demo data with any posted jobs
     if (process.env.NODE_ENV === 'production' || 
         error.code === 'NETWORK_ERROR' || 
         error.code === 'ERR_NETWORK' ||
         error.message.includes('Network Error') ||
         error.message.includes('ERR_NETWORK') ||
         !error.response) {
-      console.log('🔄 Backend unavailable, returning demo data...');
-      return getDemoJobs(filters);
+      console.log('🔄 Backend unavailable, returning demo data with local jobs...');
+      
+      // Get demo jobs
+      const demoJobs = getDemoJobs(filters);
+      
+      // Get any locally posted jobs
+      const localJobs = getLocallyPostedJobs();
+      
+      // Combine and return
+      const allJobs = [...localJobs, ...demoJobs];
+      return applyFilters(allJobs, filters);
     }
     
     throw error;
@@ -99,6 +108,39 @@ const getDemoJobs = (filters = {}) => {
   });
 };
 
+// Helper function to get locally posted jobs (for production demo mode)
+const getLocallyPostedJobs = () => {
+  try {
+    const storedJobs = localStorage.getItem('localPostedJobs');
+    return storedJobs ? JSON.parse(storedJobs) : [];
+  } catch (error) {
+    console.error('Error getting local jobs:', error);
+    return [];
+  }
+};
+
+// Helper function to save locally posted jobs
+const saveLocallyPostedJob = (job) => {
+  try {
+    const existingJobs = getLocallyPostedJobs();
+    const updatedJobs = [job, ...existingJobs.slice(0, 19)]; // Keep only 20 most recent
+    localStorage.setItem('localPostedJobs', JSON.stringify(updatedJobs));
+    console.log('💾 Saved job locally:', job.title);
+  } catch (error) {
+    console.error('Error saving local job:', error);
+  }
+};
+
+// Helper function to apply filters to jobs array
+const applyFilters = (jobs, filters) => {
+  return jobs.filter(job => {
+    if (filters.title && !job.title.toLowerCase().includes(filters.title.toLowerCase())) return false;
+    if (filters.type && job.type !== filters.type) return false;
+    if (filters.location && !job.location.toLowerCase().includes(filters.location.toLowerCase())) return false;
+    return true;
+  });
+};
+
 export const postJob = async (jobData) => {
   try {
     console.log('🌐 Posting job to API:', `${API_BASE_URL}/jobs/post`);
@@ -121,15 +163,20 @@ export const postJob = async (jobData) => {
       // Simulate processing delay
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      const newJob = { 
+        ...jobData, 
+        id: `demo-frontend-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        status: 'active'
+      };
+      
+      // Save locally for persistence in demo mode
+      saveLocallyPostedJob(newJob);
+      
       return { 
         success: true,
         message: 'Job posted successfully (demo mode)',
-        job: { 
-          ...jobData, 
-          id: `demo-frontend-${Date.now()}`,
-          created_at: new Date().toISOString(),
-          status: 'active'
-        },
+        job: newJob,
         demo: true 
       };
     }
