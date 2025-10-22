@@ -24,18 +24,40 @@ const getLocallyPostedJobs = () => {
 
 // Dynamic API URL configuration for different environments
 const getApiBaseUrl = () => {
+  // Check if we're in a browser environment (Vercel deployment)
+  const isVercelDeployment = typeof window !== 'undefined' && 
+    (window.location.hostname.includes('vercel.app') || 
+     window.location.hostname !== 'localhost');
+  
+  // Force demo mode for Vercel deployments unless explicit backend URL is provided
+  if (isVercelDeployment) {
+    if (process.env.REACT_APP_API_URL && !process.env.REACT_APP_API_URL.includes('localhost')) {
+      console.log('🌐 Using configured backend URL:', process.env.REACT_APP_API_URL);
+      return process.env.REACT_APP_API_URL;
+    }
+    console.log('🎭 Vercel deployment detected: Using demo mode (no backend)');
+    return null; // This will trigger demo mode in all API calls
+  }
+  
   // Production environment - check if backend is deployed
   if (process.env.NODE_ENV === 'production') {
     // If REACT_APP_API_URL is set, use it (for deployed backend)
-    if (process.env.REACT_APP_API_URL) {
+    if (process.env.REACT_APP_API_URL && !process.env.REACT_APP_API_URL.includes('localhost')) {
       return process.env.REACT_APP_API_URL;
     }
     // Otherwise, use demo mode (no backend deployed)
     console.log('🎭 Production mode: No backend URL configured, using demo mode');
     return null; // This will trigger demo mode in all API calls
   }
-  // Development environment
-  return process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+  
+  // Development environment - only use localhost if actually on localhost
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+  }
+  
+  // Fallback to demo mode for any other scenario
+  console.log('🎭 Fallback: Using demo mode');
+  return null;
 };
 
 const API_BASE_URL = getApiBaseUrl();
