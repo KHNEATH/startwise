@@ -228,7 +228,7 @@ const JobDetail = () => {
       setApplying(true);
       
       // Submit the application with CV
-      const result = await submitJobApplication(applicationData);
+      await submitJobApplication(applicationData);
       
       // Prepare application data for tracking
       const trackingData = {

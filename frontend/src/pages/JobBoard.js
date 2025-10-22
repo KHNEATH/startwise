@@ -18,12 +18,7 @@ const JobBoard = () => {
   const [postForm, setPostForm] = React.useState({ title: '', company: '', location: '', type: '', description: '' });
   const [postErrors, setPostErrors] = React.useState({});
   const [postSuccess, setPostSuccess] = React.useState(false);
-  const [applicationStatus, setApplicationStatus] = React.useState({});
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
-  const [editingJob, setEditingJob] = React.useState(null);
-  const [editForm, setEditForm] = React.useState({ title: '', company: '', location: '', type: '', description: '' });
-  const [editErrors, setEditErrors] = React.useState({});
-  const [deleteConfirm, setDeleteConfirm] = React.useState(null);
   const [successMessage, setSuccessMessage] = React.useState('');
   const [showJobManagementModal, setShowJobManagementModal] = React.useState(false);
   const [managementMode, setManagementMode] = React.useState('create'); // 'create' or 'edit'
@@ -58,7 +53,7 @@ const JobBoard = () => {
 
   const handleApplicationSubmit = async (applicationData) => {
     try {
-      const result = await submitJobApplication(applicationData);
+      await submitJobApplication(applicationData);
       setShowApplicationModal(false);
       setSuccessMessage(`Application submitted successfully! The employer will contact you soon.`);
       setShowSuccessModal(true);
@@ -109,10 +104,10 @@ const JobBoard = () => {
   const handleJobSubmit = async (jobData) => {
     try {
       if (managementMode === 'create') {
-        const result = await postJob(jobData);
+        await postJob(jobData);
         setSuccessMessage('Job posted successfully!');
       } else {
-        const result = await updateJob(selectedJob.id, jobData);
+        await updateJob(selectedJob.id, jobData);
         setSuccessMessage('Job updated successfully!');
       }
       
@@ -478,25 +473,10 @@ const JobBoard = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <button 
                           onClick={() => handleApplyNow(job.id, job.title)}
-                          disabled={applicationStatus[job.id] === 'applying' || applicationStatus[job.id] === 'applied'}
-                          className={`px-4 py-2 rounded-xl font-semibold text-xs transition-all duration-200 flex items-center gap-2 shadow-md ${
-                            applicationStatus[job.id] === 'applied' 
-                              ? 'bg-green-600 text-white cursor-not-allowed shadow-green-200' 
-                              : applicationStatus[job.id] === 'applying'
-                              ? 'bg-gray-400 text-white cursor-not-allowed'
-                              : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg hover:shadow-blue-200 transform hover:scale-105'
-                          }`}
+                          className="px-4 py-2 rounded-xl font-semibold text-xs transition-all duration-200 flex items-center gap-2 shadow-md bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg hover:shadow-blue-200 transform hover:scale-105"
                         >
-                          {applicationStatus[job.id] === 'applied' && <span className="text-green-100">✓</span>}
-                          {applicationStatus[job.id] === 'applying' && <span className="animate-spin">⏳</span>}
-                          <span>
-                            {applicationStatus[job.id] === 'applied' 
-                              ? 'Applied' 
-                              : applicationStatus[job.id] === 'applying' 
-                              ? 'Applying...' 
-                              : 'Apply'}
-                          </span>
-                          {!applicationStatus[job.id] && <span>→</span>}
+                          <span>Apply Now</span>
+                          <span>→</span>
                         </button>
                         
                         <button 
