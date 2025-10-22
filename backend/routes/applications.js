@@ -5,6 +5,9 @@ const router = express.Router();
 // Get all applications (for admin/employer view)
 router.get('/', async (req, res) => {
   try {
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
+    
     const [applications] = await pool.execute(`
       SELECT a.*, j.title as job_title, j.company 
       FROM applications a 
@@ -22,6 +25,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { job_id, user_id, message } = req.body;
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
     
     // Check if user already applied to this job
     const [existing] = await pool.execute(
@@ -54,6 +59,8 @@ router.post('/', async (req, res) => {
 router.post('/quick', async (req, res) => {
   try {
     const { job_title, company, user_id, name, email } = req.body;
+    const pool = getPool();
+    if (!pool) return res.status(503).json({ error: 'Database not configured' });
     
     const [result] = await pool.execute(
       'INSERT INTO applications (job_title, company, user_id, applicant_name, applicant_email, application_type, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
