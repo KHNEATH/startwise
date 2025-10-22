@@ -2,27 +2,82 @@ import axios from 'axios';
 
 // Dynamic API URL configuration for different environments
 const getApiBaseUrl = () => {
-  // Production environment
-  if (process.env.NODE_ENV === 'production') {
-    // Use the same domain as the frontend for API calls
-    const currentDomain = window.location.origin;
-    return process.env.REACT_APP_API_URL || `${currentDomain}/api`;
+  // Check if we're in a browser environment (Vercel deployment)
+  const isVercelDeployment = typeof window !== 'undefined' && 
+    (window.location.hostname.includes('vercel.app') || 
+     window.location.hostname !== 'localhost');
+  
+  // Force demo mode for Vercel deployments unless explicit backend URL is provided
+  if (isVercelDeployment) {
+    if (process.env.REACT_APP_API_URL && !process.env.REACT_APP_API_URL.includes('localhost')) {
+      console.log('🌐 Using configured backend URL:', process.env.REACT_APP_API_URL);
+      return process.env.REACT_APP_API_URL;
+    }
+    console.log('🎭 Vercel deployment detected: Using demo mode (no backend)');
+    return null; // This will trigger demo mode in all API calls
   }
-  // Development environment
-  return process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+  
+  // Production environment - check if backend is deployed
+  if (process.env.NODE_ENV === 'production') {
+    // If REACT_APP_API_URL is set, use it (for deployed backend)
+    if (process.env.REACT_APP_API_URL && !process.env.REACT_APP_API_URL.includes('localhost')) {
+      return process.env.REACT_APP_API_URL;
+    }
+    // Otherwise, use demo mode (no backend deployed)
+    console.log('🎭 Production mode: No backend URL configured, using demo mode');
+    return null; // This will trigger demo mode in all API calls
+  }
+  
+  // Development environment - only use localhost if actually on localhost
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+  }
+  
+  // Fallback to demo mode for any other scenario
+  console.log('🎭 Fallback: Using demo mode');
+  return null;
 };
 
 // Normalize API base URL and ensure it ends with '/api'
 const _rawApiBase = getApiBaseUrl();
-const API_BASE_URL = (_rawApiBase || '').replace(/\/+$/, '').endsWith('/api')
-  ? (_rawApiBase || '').replace(/\/+$/, '')
-  : (_rawApiBase || '').replace(/\/+$/, '') + '/api';
+const API_BASE_URL = _rawApiBase ? 
+  (_rawApiBase.replace(/\/+$/, '').endsWith('/api')
+    ? _rawApiBase.replace(/\/+$/, '')
+    : _rawApiBase.replace(/\/+$/, '') + '/api')
+  : null;
 
 console.log('🔐 userApi - API_BASE_URL:', API_BASE_URL, 'NODE_ENV:', process.env.NODE_ENV);
 
 export const login = async (email, password) => {
   console.log('userApi.login called with:', { email, password: '***' });
-  console.log('API URL:', `${API_BASE_URL}/auth/login`);
+  console.log('API_BASE_URL:', API_BASE_URL);
+  
+  // If no API_BASE_URL (production demo mode), return demo data immediately
+  if (!API_BASE_URL) {
+    console.log('🎭 Demo mode: No backend configured, returning demo login');
+    
+    // Simulate successful login for any credentials
+    const demoUser = {
+      id: 'demo-user-' + Date.now(),
+      name: email.split('@')[0] || 'Demo User',
+      email: email,
+      role: email.includes('admin') ? 'admin' : 'user',
+      token: 'demo-token-' + Date.now(),
+      user: {
+        id: 'demo-user-' + Date.now(),
+        name: email.split('@')[0] || 'Demo User',
+        email: email,
+        role: email.includes('admin') ? 'admin' : 'user'
+      },
+      message: 'Demo login successful! (Backend not connected)'
+    };
+    
+    // Store demo token
+    localStorage.setItem('token', demoUser.token);
+    localStorage.setItem('user', JSON.stringify(demoUser.user));
+    
+    return demoUser;
+  }
   
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
@@ -44,16 +99,23 @@ export const login = async (email, password) => {
       
       // Simulate successful login
       const demoUser = {
-        id: 'demo-user-login',
-        name: 'Demo User',
+        id: 'demo-user-' + Date.now(),
+        name: email.split('@')[0] || 'Demo User',
         email: email,
+        role: email.includes('admin') ? 'admin' : 'user',
         token: 'demo-token-' + Date.now(),
+        user: {
+          id: 'demo-user-' + Date.now(),
+          name: email.split('@')[0] || 'Demo User',
+          email: email,
+          role: email.includes('admin') ? 'admin' : 'user'
+        },
         message: 'Demo login successful! (Backend not connected)'
       };
       
       // Store demo token
       localStorage.setItem('token', demoUser.token);
-      localStorage.setItem('user', JSON.stringify(demoUser));
+      localStorage.setItem('user', JSON.stringify(demoUser.user));
       
       return demoUser;
     }
@@ -63,6 +125,33 @@ export const login = async (email, password) => {
 };
 
 export const signup = async (name, email, password) => {
+  // If no API_BASE_URL (production demo mode), return demo data immediately
+  if (!API_BASE_URL) {
+    console.log('🎭 Demo mode: No backend configured, returning demo signup');
+    
+    // Simulate successful signup for any credentials
+    const demoUser = {
+      id: 'demo-user-' + Date.now(),
+      name: name,
+      email: email,
+      role: 'user',
+      token: 'demo-token-' + Date.now(),
+      user: {
+        id: 'demo-user-' + Date.now(),
+        name: name,
+        email: email,
+        role: 'user'
+      },
+      message: 'Demo account created successfully! (Backend not connected)'
+    };
+    
+    // Store demo token
+    localStorage.setItem('token', demoUser.token);
+    localStorage.setItem('user', JSON.stringify(demoUser.user));
+    
+    return demoUser;
+  }
+
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/register`, { name, email, password });
     return response.data;
@@ -84,13 +173,20 @@ export const signup = async (name, email, password) => {
         id: 'demo-user-' + Date.now(),
         name: name,
         email: email,
+        role: 'user',
         token: 'demo-token-' + Date.now(),
+        user: {
+          id: 'demo-user-' + Date.now(),
+          name: name,
+          email: email,
+          role: 'user'
+        },
         message: 'Demo account created successfully! (Backend not connected)'
       };
       
       // Store demo token
       localStorage.setItem('token', demoUser.token);
-      localStorage.setItem('user', JSON.stringify(demoUser));
+      localStorage.setItem('user', JSON.stringify(demoUser.user));
       
       return demoUser;
     }
