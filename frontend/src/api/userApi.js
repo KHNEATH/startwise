@@ -373,7 +373,39 @@ export const getProfile = async () => {
       };
     }
 
-    const response = await axios.get(`${API_BASE_URL}/profile`);
+    const token = localStorage.getItem('token');
+    let response;
+    
+    if (token) {
+      // Try authenticated route first
+      try {
+        response = await axios.get(`${API_BASE_URL}/profile/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      } catch (error) {
+        // If auth fails, try to get saved demo profile
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          console.log('Auth failed, loading demo profile');
+          const savedProfile = localStorage.getItem('demoProfile');
+          if (savedProfile) {
+            return { profile: JSON.parse(savedProfile), demo: true };
+          }
+          throw error;
+        } else {
+          throw error;
+        }
+      }
+    } else {
+      // No token, load demo profile
+      const savedProfile = localStorage.getItem('demoProfile');
+      if (savedProfile) {
+        return { profile: JSON.parse(savedProfile), demo: true };
+      }
+      throw new Error('No authentication token found');
+    }
+    
     return response.data;
   } catch (error) {
     console.error('getProfile error:', error);
