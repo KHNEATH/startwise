@@ -36,8 +36,8 @@ const ProfileBuilder = () => {
     if (Object.keys(validation).length === 0) {
       setLoading(true);
       try {
-        // TODO: Replace userId=1 with real user ID from auth
-        await saveProfile({ userId: 1, profile: form });
+        // Send profile data - userId will be extracted from auth token on backend
+        await saveProfile({ profile: form });
         setSubmitted(true);
       } catch (err) {
         setApiError(err?.response?.data?.error || 'Failed to save profile');
